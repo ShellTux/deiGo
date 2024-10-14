@@ -25,25 +25,63 @@
 %}
 digit   [0-9]
 letter	[a-zA-Z_]
-keywords (break|default|func|interface|select|case|defer|go|map|struct|chan|else|goto|package|switch|const|fallthrough|if|range|type|continue|for|import|return|var)
+keywords (break|default|func|interface|select|case|defer|go|map|struct|chan|else|goto|package|switch|const|fallthrough|if|range|type|continue|for|import|return|var|\+\+|--)
 whitespace [ \t]
 %X COMMENT
 %X STRING
 %%
-"/*"			{ BEGIN(COMMENT); }
-<COMMENT>.		{ ECHO; }
-<COMMENT>\n		{ ++line; column = 1; ECHO; }
-<COMMENT>"*/"		{ BEGIN(INITIAL); }
-\"			{ BEGIN(STRING); printf("STRLIT(\""); }
-<STRING>.		{ ECHO; }
-<STRING>[^\\]\"		{ ECHO; printf(")\n"); BEGIN(INITIAL); }
-{keywords}		{ printf("%s\n", toUpperString(yytext)); }
-{digit}+                { printf("NATURAL(%s)\n", yytext); }
-{digit}*"."{digit}+     { printf("DECIMAL(%s)\n", yytext); }
-{letter}({letter}|{digit})*		{ printf("IDENTIFIER(%s)\n", yytext); }
-\n			{ ++line; column = 1; }
-{whitespace}+		{;}
-.			{ printf("Line %d, column %d: illegal character (%s)\n", line, column - yyleng, yytext); }
+"/*"					{ BEGIN(COMMENT); }
+<COMMENT>.				{ ECHO; }
+<COMMENT>\n				{ ++line; column = 1; ECHO; }
+<COMMENT>"*/"				{ BEGIN(INITIAL); }
+\"					{ BEGIN(STRING); printf("STRLIT(\""); }
+<STRING>.				{ ECHO; }
+<STRING>[^\\]\"				{ ECHO; printf(")\n"); BEGIN(INITIAL); }
+";"					{ printf("SEMICOLON\n"); }
+","					{ printf("COMMA\n"); }
+"_"					{ printf("BLANKID\n"); }
+"="					{ printf("ASSIGN\n"); }
+"*"					{ printf("STAR\n"); }
+"/"					{ printf("DIV\n"); }
+"-"					{ printf("MINUS\n"); }
+"+"					{ printf("PLUS\n"); }
+"=="					{ printf("EQ\n"); }
+">="					{ printf("GE\n"); }
+">"					{ printf("GT\n"); }
+"{"					{ printf("LBRACE\n"); }
+"<="					{ printf("LE\n"); }
+"("					{ printf("LPAR\n"); }
+"["					{ printf("LSQ\n"); }
+"<"					{ printf("LT\n"); }
+"%"					{ printf("MOD\n"); }
+"!="					{ printf("NE\n"); }
+"!"					{ printf("NOT\n"); }
+"&&"					{ printf("AND\n"); }
+"||"					{ printf("OR\n"); }
+"}"					{ printf("RBRACE\n"); }
+")"					{ printf("RPAR\n"); }
+"]"					{ printf("RSQ\n"); }
+package					{ printf("PACKAGE\n"); }
+return					{ printf("RETURN\n"); }
+else					{ printf("ELSE\n"); }
+for					{ printf("FOR\n"); }
+if					{ printf("IF\n"); }
+var					{ printf("VAR\n"); }
+int					{ printf("INT\n"); }
+float32					{ printf("FLOAT32\n"); }
+bool					{ printf("BOOL\n"); }
+string					{ printf("STRING\n"); }
+fmt\.Println				{ printf("PRINT\n"); }
+strconv.Atoi				{ printf("PARSEINT\n"); }
+func					{ printf("FUNC\n"); }
+os\.Args				{ printf("CMDARGS\n"); }
+{keywords}				{ printf("%s\n", toUpperString(yytext)); }
+({digit}+|((0|0x|0X)[0-9a-fA-F]{6}))	{ printf("NATURAL(%s)\n", yytext); }
+{digit}*"."{digit}+     		{ printf("DECIMAL(%s)\n", yytext); }
+({letter}|_)({letter}|{digit}|_)*	{ printf("IDENTIFIER(%s)\n", yytext); }
+\n					{ ++line; column = 1; }
+{whitespace}+				{;}
+.					{ printf("Line %d, column %d: illegal character (%s)\n", line, column - yyleng, yytext); }
 
 %%
 extern int yylex();
