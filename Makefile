@@ -1,3 +1,5 @@
+CXXFLAGS = -Wall -Wextra -std=c++17
+
 COMPILER = bin/deigoc
 
 all: $(COMPILER)
