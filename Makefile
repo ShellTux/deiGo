@@ -15,5 +15,5 @@ run: $(COMPILER)
 	./$(COMPILER)
 
 .PHONY: run-tests
-run-tests:
-	@echo TODO
+run-tests: $(COMPILER)
+	./test.sh
