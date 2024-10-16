@@ -180,3 +180,5 @@ do
 		unit_test "$meta" "$t"
 	done
 done
+
+test $failed = 0
