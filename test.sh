@@ -140,7 +140,7 @@ diff() {
 
 	if ! testMessage "$2"
 	then
-		bash -c 'diff --color=always --side-by-side '"$1"' <('"$compiler"' < '"$2"')'
+		bash -c 'diff --color=always --side-by-side <('"$compiler"' < '"$2"') '"$1"''
 		$fail_on_first && exit 1
 	fi
 }
