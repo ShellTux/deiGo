@@ -80,7 +80,7 @@ os\.Args				{ printf("CMDARGS\n"); }
 {digit}*"."{digit}+     		{ printf("DECIMAL(%s)\n", yytext); }
 ({letter}|_)({letter}|{digit}|_)*	{ printf("IDENTIFIER(%s)\n", yytext); }
 \n					{ ++line; column = 1; }
-{whitespace}+				{;}
+({whitespace}+|"//".*)			{;}
 .					{ printf("Line %d, column %d: illegal character (%s)\n", line, column - yyleng, yytext); }
 
 %%
