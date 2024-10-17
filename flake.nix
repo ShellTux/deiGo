@@ -33,8 +33,10 @@
 		    lcov
 		    libgcc
 		    llvm_14
+		    unzip
 		    vcpkg
 		    vcpkg-tool
+		    zip
             ] ++ (if system == "aarch64-darwin" then [ ] else [ gdb ]);
           };
       });
