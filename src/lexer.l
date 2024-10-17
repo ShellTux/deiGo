@@ -76,7 +76,7 @@ strconv.Atoi				{ printf("PARSEINT\n"); }
 func					{ printf("FUNC\n"); }
 os\.Args				{ printf("CMDARGS\n"); }
 {keywords}				{ printf("RESERVED(%s)\n", yytext); }
-({digit}+|((0|0x|0X)[0-9a-fA-F]{6}))	{ printf("NATURAL(%s)\n", yytext); }
+(0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)	{ printf("NATURAL(%s)\n", yytext); }
 {digit}*"."{digit}+     		{ printf("DECIMAL(%s)\n", yytext); }
 ({letter}|_)({letter}|{digit}|_)*	{ printf("IDENTIFIER(%s)\n", yytext); }
 \n					{ ++line; column = 1; }
