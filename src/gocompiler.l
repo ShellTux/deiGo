@@ -6,6 +6,9 @@
     int line = 1;
     int column = 1;
 
+    char buf[4096];
+    char *string = NULL;
+
     void tokenPreHook(void);
 
     char* toUpperString(char *temp) {
@@ -23,6 +26,18 @@
 
     }
 
+    inline void error(const char *message) {
+	    const FILE *file = stdout;
+	    fprintf(file, "Line %d, column %d: ", line, column - yyleng); 
+	    if (message == NULL || *message == '\0') {
+	    	fprintf(file, "illegal character (%s)", yytext);
+	    } else {
+	    	fprintf(file, message);
+	    }
+
+	    fprintf(stderr, "\n");
+    }
+
     #define YY_USER_ACTION tokenPreHook();
 %}
 digit   [0-9]
@@ -33,12 +48,20 @@ whitespace [ \t]
 %X STRING
 %%
 "/*"					{ BEGIN(COMMENT); }
-<COMMENT>.				{ ECHO; }
-<COMMENT>\n				{ ++line; column = 1; ECHO; }
+<COMMENT>.				{ ; }
+<COMMENT>\n				{ ++line; column = 1; }
 <COMMENT>"*/"				{ BEGIN(INITIAL); }
-\"					{ BEGIN(STRING); printf("STRLIT(\""); }
-<STRING>.				{ ECHO; }
-<STRING>[^\\]\"				{ ECHO; printf(")\n"); BEGIN(INITIAL); }
+\"              			{ BEGIN(STRING); string = buf; }
+<STRING>\\n     			{ *string++ = '\n'; }
+<STRING>\\t     			{ *string++ = '\t'; }
+<STRING>\\\"    			{ *string++ = '\"'; }
+<STRING>\"      			{
+                			  *string = 0;
+                			  BEGIN(INITIAL);
+                			  printf("STRLIT(%s)\n", buf);
+                			}
+<STRING>\n      			{ column--; error("unterminated string literal"); column++; }
+<STRING>.       			{ *string++ = *yytext; }
 ";"					{ printf("SEMICOLON\n"); }
 ","					{ printf("COMMA\n"); }
 "_"					{ printf("BLANKID\n"); }
@@ -84,7 +107,7 @@ os\.Args				{ printf("CMDARGS\n"); }
 ({letter}|_)({letter}|{digit}|_)*	{ printf("IDENTIFIER(%s)\n", yytext); }
 \n					{ ++line; column = 1; }
 ({whitespace}+|"//".*)			{;}
-.					{ printf("Line %d, column %d: illegal character (%s)\n", line, column - yyleng, yytext); }
+.					{ error(NULL); }
 
 %%
 extern int yylex();
