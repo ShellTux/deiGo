@@ -27,7 +27,7 @@
     }
 
     inline void error(const char *message) {
-	    const FILE *file = stdout;
+	    #define file stdout
 	    fprintf(file, "Line %d, column %d: ", line, column - yyleng); 
 	    if (message == NULL || *message == '\0') {
 	    	fprintf(file, "illegal character (%s)", yytext);
@@ -35,7 +35,8 @@
 	    	fprintf(file, message);
 	    }
 
-	    fprintf(stderr, "\n");
+	    fprintf(file, "\n");
+	    #undef file
     }
 
     #define YY_USER_ACTION tokenPreHook();
