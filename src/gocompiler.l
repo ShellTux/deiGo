@@ -6,6 +6,9 @@
     int line = 1;
     int column = 1;
 
+    int stateLine;
+    int stateColumn;
+
     char buf[4096];
     char *string = NULL;
 
@@ -26,19 +29,7 @@
 
     }
 
-    inline void error(const char *message) {
-	    #define file stdout
-	    fprintf(file, "Line %d, column %d: ", line, column - yyleng); 
-	    if (message == NULL || *message == '\0') {
-	    	fprintf(file, "illegal character (%s)", yytext);
-	    } else {
-	    	fprintf(file, message);
-	    }
-
-	    fprintf(file, "\n");
-	    #undef file
-    }
-
+    #define ERROR_FORMAT(MESSAGE) "Line %d, column %d: " MESSAGE "\n"
     #define YY_USER_ACTION tokenPreHook();
 %}
 digit   [0-9]
@@ -47,22 +38,47 @@ keywords (break|default|func|interface|select|case|defer|go|map|struct|chan|else
 whitespace [ \t]
 %X COMMENT
 %X STRING
+%X INVALID_STRING
 %%
-"/*"					{ BEGIN(COMMENT); }
+"/*"					{ BEGIN(COMMENT); stateLine = line; stateColumn = column - yyleng; }
 <COMMENT>.				{ ; }
 <COMMENT>\n				{ ++line; column = 1; }
 <COMMENT>"*/"				{ BEGIN(INITIAL); }
-\"              			{ BEGIN(STRING); string = buf; }
+<COMMENT><<EOF>>			{ printf(ERROR_FORMAT("unterminated comment"), stateLine, stateColumn); yyterminate(); }
+\"              			{ BEGIN(STRING); string = buf; stateLine = line; stateColumn = column - yyleng; }
 <STRING>\\n     			{ *string++ = '\n'; }
 <STRING>\\t     			{ *string++ = '\t'; }
 <STRING>\\\"    			{ *string++ = '\"'; }
 <STRING>\"      			{
                 			  *string = 0;
-                			  BEGIN(INITIAL);
-                			  printf("STRLIT(%s)\n", buf);
+					  BEGIN(INITIAL);
+					  printf("STRLIT(\"%s\")\n", buf);
                 			}
-<STRING>\n      			{ column--; error("unterminated string literal"); column++; }
+<STRING>\n      			{
+						printf(
+								ERROR_FORMAT("unterminated string literal"),
+								stateLine,
+								stateColumn,
+								yytext
+						      );
+						column = 1;
+						++line;
+						*string = '\0';
+						BEGIN(INITIAL);
+					}
+<STRING>\\[^fnrt\\\"]			{ printf(ERROR_FORMAT("invalid escape sequence (%s)"), line, column - yyleng, yytext); BEGIN(INVALID_STRING); }
 <STRING>.       			{ *string++ = *yytext; }
+<STRING><<EOF>>      			{
+						printf(
+								ERROR_FORMAT("unterminated string literal"),
+								stateLine,
+								stateColumn,
+								yytext
+						      );
+						*string = '\0';
+						yyterminate();
+					}
+<INVALID_STRING>.*\"			{ BEGIN(INITIAL); }
 ";"					{ printf("SEMICOLON\n"); }
 ","					{ printf("COMMA\n"); }
 "_"					{ printf("BLANKID\n"); }
@@ -108,7 +124,8 @@ os\.Args				{ printf("CMDARGS\n"); }
 ({letter}|_)({letter}|{digit}|_)*	{ printf("IDENTIFIER(%s)\n", yytext); }
 \n					{ ++line; column = 1; }
 ({whitespace}+|"//".*)			{;}
-.					{ error(NULL); }
+0[089][0-9]*				{ printf(ERROR_FORMAT("invalid octal constant (%s)"), line, column - yyleng, yytext); }
+.					{ printf(ERROR_FORMAT("illegal character (%s)"), line, column - yyleng, yytext); }
 
 %%
 extern int yylex();
