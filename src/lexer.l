@@ -75,7 +75,7 @@ fmt\.Println				{ printf("PRINT\n"); }
 strconv.Atoi				{ printf("PARSEINT\n"); }
 func					{ printf("FUNC\n"); }
 os\.Args				{ printf("CMDARGS\n"); }
-{keywords}				{ printf("%s\n", toUpperString(yytext)); }
+{keywords}				{ printf("RESERVED(%s)\n", yytext); }
 ({digit}+|((0|0x|0X)[0-9a-fA-F]{6}))	{ printf("NATURAL(%s)\n", yytext); }
 {digit}*"."{digit}+     		{ printf("DECIMAL(%s)\n", yytext); }
 ({letter}|_)({letter}|{digit}|_)*	{ printf("IDENTIFIER(%s)\n", yytext); }
