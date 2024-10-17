@@ -1,3 +1,5 @@
+/* Luís Pedro de Sousa Oliveira Góis 2018280716 */
+/* João Fonseca 2021227194 */
 %{
     #include <ctype.h>
 
