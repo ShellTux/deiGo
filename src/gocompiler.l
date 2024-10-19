@@ -284,13 +284,13 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 {DECIMAL}		{ lastToken = DECIMAL; printLastToken(); /* TODO: Merge this rule into rule below */ }
 {IDENTIFIER}		{ lastToken = IDENTIFIER; printLastToken(); }
 
-{lineterminator}*	{
-						++line;
-						column = 1;
+{lineterminator}	{
+				++line;
+				column = 1;
 
-						checkLastToken();
-						lastToken = OTHER;
-					}
+				checkLastToken();
+				lastToken = OTHER;
+			}
 ({whitespace}+|"//".*)			{;}
 0[089][0-9]*				{ printf(ERROR_FORMAT("invalid octal constant (%s)"), line, column - yyleng, yytext); }
 .					{ printf(ERROR_FORMAT("illegal character (%s)"), line, column - yyleng, yytext); }
