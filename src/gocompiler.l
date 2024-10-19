@@ -12,30 +12,188 @@
     char buf[4096];
     char *string = NULL;
 
+    #define TOKENS_WITHOUT_FORMAT \
+	    TOKEN(SEMICOLON, "SEMICOLON") \
+	    TOKEN(COMMA, "COMMA") \
+	    TOKEN(BLANKID, "BLANKID") \
+	    TOKEN(ASSIGN, "ASSIGN") \
+	    TOKEN(STAR, "STAR") \
+	    TOKEN(DIV, "DIV") \
+	    TOKEN(MINUS, "MINUS") \
+	    TOKEN(PLUS, "PLUS") \
+	    TOKEN(EQ, "EQ") \
+	    TOKEN(GE, "GE") \
+	    TOKEN(GT, "GT") \
+	    TOKEN(LBRACE, "LBRACE") \
+	    TOKEN(LE, "LE") \
+	    TOKEN(LPAR, "LPAR") \
+	    TOKEN(LSQ, "LSQ") \
+	    TOKEN(LT, "LT") \
+	    TOKEN(MOD, "MOD") \
+	    TOKEN(NE, "NE") \
+	    TOKEN(NOT, "NOT") \
+	    TOKEN(AND, "AND") \
+	    TOKEN(OR, "OR") \
+	    TOKEN(RBRACE, "RBRACE") \
+	    TOKEN(RPAR, "RPAR") \
+	    TOKEN(RSQ, "RSQ") \
+	    TOKEN(PACKAGE, "PACKAGE") \
+	    TOKEN(RETURN, "RETURN") \
+	    TOKEN(ELSE, "ELSE") \
+	    TOKEN(FOR, "FOR") \
+	    TOKEN(IF, "IF") \
+	    TOKEN(VAR, "VAR") \
+	    TOKEN(INT, "INT") \
+	    TOKEN(FLOAT32, "FLOAT32") \
+	    TOKEN(BOOL, "BOOL") \
+	    TOKEN(STRING, "STRING") \
+	    TOKEN(PRINT, "PRINT") \
+	    TOKEN(PARSEINT, "PARSEINT") \
+	    TOKEN(FUNC, "FUNC") \
+	    TOKEN(CMDARGS, "CMDARGS")
+	#define TOKENS_WITH_FORMAT \
+	    TOKEN(RESERVED, "RESERVED") \
+	    TOKEN(NATURAL, "NATURAL") \
+	    TOKEN(DECIMAL, "DECIMAL") \
+	    TOKEN(IDENTIFIER, "IDENTIFIER") \
+	    TOKEN(STRLIT, "STRLIT")
+
+
+	#define TOKENS \
+		TOKENS_WITHOUT_FORMAT \
+		TOKENS_WITH_FORMAT
+
+    typedef enum {
+	    OTHER,
+
+	    #define TOKEN(NAME, STRING) \
+	    	NAME,
+		TOKENS
+		#undef TOKEN
+    } Token;
+
+    Token lastToken = OTHER;
+
     void tokenPreHook(void);
 
-    char* toUpperString(char *temp) {
-	    char *name;
-	    name = strtok(temp,":");
+    void printLex(const char *token) {
+    	if (token == NULL) {
+		return;
+	}
 
-	    // Convert to upper case
-	    char *s = name;
-	    while (*s) {
-		    *s = toupper((unsigned char) *s);
-		    s++;
-	    }
+    	printf("%s\n", token);
+    }
 
-	    return temp;
+    void printLexF(const char *token) {
+    	if (token == NULL) {
+		return;
+	}
 
+	printf("%s(%s)\n", token, yytext);
+    }
+
+    typedef void (*PrintLexFunction)(const char *);
+
+    void printToken(const Token token) {
+	char *string = NULL;
+	PrintLexFunction printF = NULL;
+	switch (token) {
+		#define TOKEN(NAME, STRING) \
+			case NAME: \
+				string = STRING; \
+				printF = printLex; \
+				break;
+		TOKENS_WITHOUT_FORMAT
+		#undef TOKEN
+		#define TOKEN(NAME, STRING) \
+			case NAME: \
+				string = STRING; \
+				printF = printLexF; \
+				break;
+		TOKENS_WITH_FORMAT
+		#undef TOKEN
+		default:
+			printf("Invalid Token\n");
+			break;
+	}
+
+	printF(string);
+    }
+
+    void printLastToken(void) {
+	printToken(lastToken);
+    }
+
+    inline void checkLastToken(void) {
+    	switch (lastToken) {
+		case NATURAL:
+		case DECIMAL:
+		case STRLIT:
+		case IDENTIFIER:
+		case RETURN:
+		case RPAR:
+		case RSQ:
+		case RBRACE:
+			printToken(SEMICOLON);
+			break;
+		default:
+		break;
+	}
     }
 
     #define ERROR_FORMAT(MESSAGE) "Line %d, column %d: " MESSAGE "\n"
     #define YY_USER_ACTION tokenPreHook();
 %}
-digit   [0-9]
-letter	[a-zA-Z_]
-keywords (break|default|func|interface|select|case|defer|go|map|struct|chan|else|goto|package|switch|const|fallthrough|if|range|type|continue|for|import|return|var|\+\+|--)
-whitespace [ \t]
+
+digit			[0-9]
+letter			[a-zA-Z_]
+whitespace		[ \t]
+lineterminator		"\n"|"\r\n"
+
+SEMICOLON		";"
+COMMA			","
+BLANKID			"_"
+ASSIGN			"="
+STAR			"*"
+DIV			"/"
+MINUS			"-"
+PLUS			"+"
+EQ			"=="
+GE			">="
+GT			">"
+LBRACE			"{"
+LE			"<="
+LPAR			"("
+LSQ			"["
+LT			"<"
+MOD			"%"
+NE			"!="
+NOT			"!"
+AND			"&&"
+OR			"||"
+RBRACE			"}"
+RPAR			")"
+RSQ			"]"
+PACKAGE			"package"
+RETURN			"return"
+ELSE			"else"
+FOR			"for"
+IF			"if"
+VAR			"var"
+INT			"int"
+FLOAT32			"float32"
+BOOL			"bool"
+STRING			"string"
+PRINT			"fmt\.Println"
+PARSEINT		"strconv\.Atoi"
+FUNC			"func"
+CMDARGS			"os\.Args"
+
+RESERVED		(break|default|func|interface|select|case|defer|go|map|struct|chan|else|goto|package|switch|const|fallthrough|if|range|type|continue|for|import|return|var|\+\+|--)
+NATURAL			(0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)
+DECIMAL			({digit}+e[+-]?{digit}+|({digit}*"."{digit}+|{digit}+"."{digit}*)(e[+-]?{digit}+)?)
+IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
+
 %X COMMENT
 %X STRING
 %X INVALID_STRING
@@ -45,6 +203,7 @@ whitespace [ \t]
 <COMMENT>\n				{ ++line; column = 1; }
 <COMMENT>"*/"				{ BEGIN(INITIAL); }
 <COMMENT><<EOF>>			{ printf(ERROR_FORMAT("unterminated comment"), stateLine, stateColumn); yyterminate(); }
+
 \"              			{ BEGIN(STRING); string = buf; stateLine = line; stateColumn = column - yyleng; }
 <STRING>\\n     			{ *string++ = '\n'; }
 <STRING>\\t     			{ *string++ = '\t'; }
@@ -52,6 +211,7 @@ whitespace [ \t]
 <STRING>\"      			{
                 			  *string = 0;
 					  BEGIN(INITIAL);
+					  lastToken = STRLIT;
 					  printf("STRLIT(\"%s\")\n", buf);
                 			}
 <STRING>\n      			{
@@ -78,54 +238,68 @@ whitespace [ \t]
 						*string = '\0';
 						yyterminate();
 					}
+
 <INVALID_STRING>.*\"			{ BEGIN(INITIAL); }
-";"					{ printf("SEMICOLON\n"); }
-","					{ printf("COMMA\n"); }
-"_"					{ printf("BLANKID\n"); }
-"="					{ printf("ASSIGN\n"); }
-"*"					{ printf("STAR\n"); }
-"/"					{ printf("DIV\n"); }
-"-"					{ printf("MINUS\n"); }
-"+"					{ printf("PLUS\n"); }
-"=="					{ printf("EQ\n"); }
-">="					{ printf("GE\n"); }
-">"					{ printf("GT\n"); }
-"{"					{ printf("LBRACE\n"); }
-"<="					{ printf("LE\n"); }
-"("					{ printf("LPAR\n"); }
-"["					{ printf("LSQ\n"); }
-"<"					{ printf("LT\n"); }
-"%"					{ printf("MOD\n"); }
-"!="					{ printf("NE\n"); }
-"!"					{ printf("NOT\n"); }
-"&&"					{ printf("AND\n"); }
-"||"					{ printf("OR\n"); }
-"}"					{ printf("RBRACE\n"); }
-")"					{ printf("RPAR\n"); }
-"]"					{ printf("RSQ\n"); }
-package					{ printf("PACKAGE\n"); }
-return					{ printf("RETURN\n"); }
-else					{ printf("ELSE\n"); }
-for					{ printf("FOR\n"); }
-if					{ printf("IF\n"); }
-var					{ printf("VAR\n"); }
-int					{ printf("INT\n"); }
-float32					{ printf("FLOAT32\n"); }
-bool					{ printf("BOOL\n"); }
-string					{ printf("STRING\n"); }
-fmt\.Println				{ printf("PRINT\n"); }
-strconv.Atoi				{ printf("PARSEINT\n"); }
-func					{ printf("FUNC\n"); }
-os\.Args				{ printf("CMDARGS\n"); }
-{keywords}				{ printf("RESERVED(%s)\n", yytext); }
-(0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)	{ printf("NATURAL(%s)\n", yytext); }
-{digit}+e[+-]?{digit}+			{ printf("DECIMAL(%s)\n", yytext); /* TODO: Merge this rule into rule below */ }
-({digit}*"."{digit}+|{digit}+"."{digit}*)(e[+-]?{digit}+)?  	{ printf("DECIMAL(%s)\n", yytext); }
-({letter}|_)({letter}|{digit}|_)*	{ printf("IDENTIFIER(%s)\n", yytext); }
-\n					{ ++line; column = 1; }
+
+{SEMICOLON}		{ lastToken = SEMICOLON; printLastToken(); }
+{COMMA}			{ lastToken = COMMA; printLastToken(); }
+{BLANKID}		{ lastToken = BLANKID; printLastToken(); }
+{ASSIGN}		{ lastToken = ASSIGN; printLastToken(); }
+{STAR}			{ lastToken = STAR; printLastToken(); }
+{DIV}			{ lastToken = DIV; printLastToken(); }
+{MINUS}			{ lastToken = MINUS; printLastToken(); }
+{PLUS}			{ lastToken = PLUS; printLastToken(); }
+{EQ}			{ lastToken = EQ; printLastToken(); }
+{GE}			{ lastToken = GE; printLastToken(); }
+{GT}			{ lastToken = GT; printLastToken(); }
+{LBRACE}		{ lastToken = LBRACE; printLastToken(); }
+{LE}			{ lastToken = LE; printLastToken(); }
+{LPAR}			{ lastToken = LPAR; printLastToken(); }
+{LSQ}			{ lastToken = LSQ; printLastToken(); }
+{LT}			{ lastToken = LT; printLastToken(); }
+{MOD}			{ lastToken = MOD; printLastToken(); }
+{NE}			{ lastToken = NE; printLastToken(); }
+{NOT}			{ lastToken = NOT; printLastToken(); }
+{AND}			{ lastToken = AND; printLastToken(); }
+{OR}			{ lastToken = OR; printLastToken(); }
+{RBRACE}		{ lastToken = RBRACE; printLastToken(); }
+{RPAR}			{ lastToken = RPAR; printLastToken(); }
+{RSQ}			{ lastToken = RSQ; printLastToken(); }
+{PACKAGE}		{ lastToken = PACKAGE; printLastToken(); }
+{RETURN}		{ lastToken = RETURN; printLastToken(); }
+{ELSE}			{ lastToken = ELSE; printLastToken(); }
+{FOR}			{ lastToken = FOR; printLastToken(); }
+{IF}			{ lastToken = IF; printLastToken(); }
+{VAR}			{ lastToken = VAR; printLastToken(); }
+{INT}			{ lastToken = INT; printLastToken(); }
+{FLOAT32}		{ lastToken = FLOAT32; printLastToken(); }
+{BOOL}			{ lastToken = BOOL; printLastToken(); }
+{STRING}		{ lastToken = STRING; printLastToken(); }
+{PRINT}			{ lastToken = PRINT; printLastToken(); }
+{PARSEINT}		{ lastToken = PARSEINT; printLastToken(); }
+{FUNC}			{ lastToken = FUNC; printLastToken(); }
+{CMDARGS}		{ lastToken = CMDARGS; printLastToken(); }
+
+{RESERVED}		{ lastToken = RESERVED; printLastToken(); }
+{NATURAL}		{ lastToken = NATURAL; printLastToken(); }
+{DECIMAL}		{ lastToken = DECIMAL; printLastToken(); /* TODO: Merge this rule into rule below */ }
+{IDENTIFIER}		{ lastToken = IDENTIFIER; printLastToken(); }
+
+{lineterminator}*	{
+						++line;
+						column = 1;
+
+						checkLastToken();
+						lastToken = OTHER;
+					}
 ({whitespace}+|"//".*)			{;}
 0[089][0-9]*				{ printf(ERROR_FORMAT("invalid octal constant (%s)"), line, column - yyleng, yytext); }
 .					{ printf(ERROR_FORMAT("illegal character (%s)"), line, column - yyleng, yytext); }
+<<EOF>>					{
+						checkLastToken();
+						lastToken = OTHER;
+						yyterminate();
+					}
 
 %%
 extern int yylex();
