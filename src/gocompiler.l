@@ -205,9 +205,8 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 <COMMENT><<EOF>>			{ printf(ERROR_FORMAT("unterminated comment"), stateLine, stateColumn); yyterminate(); }
 
 \"              			{ BEGIN(STRING); string = buf; stateLine = line; stateColumn = column - yyleng; }
-<STRING>\\n     			{ *string++ = '\n'; }
-<STRING>\\t     			{ *string++ = '\t'; }
-<STRING>\\\"    			{ *string++ = '\"'; }
+<STRING>\\\"    			{ *string++ = '\\'; *string++ = '\"'; }
+<STRING>\\\\				{ *string++ = '\\'; *string++ = '\\'; }
 <STRING>\"      			{
                 			  *string = 0;
 					  BEGIN(INITIAL);
