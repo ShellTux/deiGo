@@ -23,3 +23,8 @@ run: $(COMPILER)
 .PHONY: test
 test: $(COMPILER)
 	./test.sh --metas=1
+
+.PHONY: clean
+clean:
+	find . -type f -iname "*.o" -exec rm --force "{}" \;
+	rm --force $(COMPILER) $(COMPILER_ZIP)
