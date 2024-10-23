@@ -55,11 +55,11 @@
 	    TOKEN(FUNC, "FUNC") \
 	    TOKEN(CMDARGS, "CMDARGS")
 	#define TOKENS_WITH_FORMAT \
-	    TOKEN(RESERVED, "RESERVED") \
-	    TOKEN(NATURAL, "NATURAL") \
-	    TOKEN(DECIMAL, "DECIMAL") \
-	    TOKEN(IDENTIFIER, "IDENTIFIER") \
-	    TOKEN(STRLIT, "STRLIT")
+	    TOKEN(RESERVED, "RESERVED(%s)") \
+	    TOKEN(NATURAL, "NATURAL(%s)") \
+	    TOKEN(DECIMAL, "DECIMAL(%s)") \
+	    TOKEN(IDENTIFIER, "IDENTIFIER(%s)") \
+	    TOKEN(STRLIT, "STRLIT(\"%s\")")
 
 
 	#define TOKENS \
@@ -79,7 +79,9 @@
 
     void tokenPreHook(void);
 
-    void printLex(const char *token) {
+    void printLex(const char *token, const char *_string) {
+    	(void) _string;
+
     	if (token == NULL) {
 		return;
 	}
@@ -87,30 +89,40 @@
     	printf("%s\n", token);
     }
 
-    void printLexF(const char *token) {
-    	if (token == NULL) {
+    void printLexF(const char *format, const char *string) {
+    	if (format == NULL || *format == '\0' || string == NULL || *string == '\0') {
 		return;
 	}
 
-	printf("%s(%s)\n", token, yytext);
+	printf(format, string);
+	printf("\n");
     }
 
-    typedef void (*PrintLexFunction)(const char *);
+    typedef void (*PrintLexFunction)(const char *, const char *);
 
     void printToken(const Token token) {
+	// HACK: Fix
+    	if (token == STRLIT) {
+		printf("STRLIT(\"%s\")\n", buf);
+		return;
+	}
+
+	char *format = NULL;
 	char *string = NULL;
+
 	PrintLexFunction printF = NULL;
 	switch (token) {
 		#define TOKEN(NAME, STRING) \
 			case NAME: \
-				string = STRING; \
+				format = STRING; \
 				printF = printLex; \
 				break;
 		TOKENS_WITHOUT_FORMAT
 		#undef TOKEN
-		#define TOKEN(NAME, STRING) \
+		#define TOKEN(NAME, FORMAT) \
 			case NAME: \
-				string = STRING; \
+				format = FORMAT; \
+				string = yytext; \
 				printF = printLexF; \
 				break;
 		TOKENS_WITH_FORMAT
@@ -120,7 +132,7 @@
 			break;
 	}
 
-	printF(string);
+	printF(format, string);
     }
 
     void printLastToken(void) {
@@ -226,7 +238,7 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 <STR>\"				{
 					*string = '\0';
 					lastToken = STRLIT;
-					printf("STRLIT(\"%s\")\n", buf);
+					printLastToken();
 					BEGIN(INITIAL);
 				}
 <STR>\n      			{
