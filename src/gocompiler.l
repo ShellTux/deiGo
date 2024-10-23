@@ -196,7 +196,7 @@ INVALID_OCTAL		0[0-7]*[8-9]+[0-9]*
 					BEGIN(INITIAL);
 				}
 <STR>\n      			{
-					PRINT_ERROR("unterminated string literal", stateLine,stateColumn);
+					PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
 					nextLine();
 					*string = '\0';
 					BEGIN(INITIAL);
