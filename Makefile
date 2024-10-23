@@ -21,4 +21,4 @@ run: $(COMPILER)
 
 .PHONY: test
 test: $(COMPILER)
-	./test.sh
+	./test.sh --metas=1
