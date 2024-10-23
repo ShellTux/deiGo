@@ -114,7 +114,7 @@
     void tokenPreHook(void);
     void nextLine(void);
 
-    inline void checkLastToken(void);
+    void checkLastToken(void);
     void printLastToken(void);
     void printLex(const char *token, const char *_string);
     void printLexF(const char *format, const char *string);
