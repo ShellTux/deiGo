@@ -2,6 +2,9 @@
 /* João Fonseca 2021227194 */
 %{
     #include <ctype.h>
+    #include <stdbool.h>
+
+    bool debugMode = false;
 
     int line = 1;
     int column = 1;
@@ -121,6 +124,10 @@
     }
 
     void printLastToken(void) {
+    	if (!debugMode) {
+		return;
+	}
+
 	printToken(lastToken);
     }
 
@@ -318,9 +325,14 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 %%
 
 extern int yylex();
-int main() {
-    yylex();    /* run the lexical analysis automaton */
-    return 0;
+int main(int argc, char **argv) {
+	for (int i = 1; i < argc; ++i) {
+		const char *arg = argv[i];
+
+		debugMode |= strcmp("-l", arg) == 0;
+	}
+	yylex();
+	return 0;
 }
 int yywrap() {  /* called on EOF, return 1 to terminate */
     return 1;
