@@ -142,6 +142,7 @@
     }
 
     #define ERROR_FORMAT(MESSAGE) "Line %d, column %d: " MESSAGE "\n"
+    #define PRINT_ERROR(FORMAT, ...) printf(ERROR_FORMAT(FORMAT), __VA_ARGS__)
     #define YY_USER_ACTION tokenPreHook();
 %}
 
@@ -195,50 +196,64 @@ DECIMAL			({digit}+e[+-]?{digit}+|({digit}*"."{digit}+|{digit}+"."{digit}*)(e[+-
 IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 
 %X COMMENT
-%X STRING
-%X INVALID_STRING
+%X STR
+%X INVALID_STR
+
 %%
 "/*"					{ BEGIN(COMMENT); stateLine = line; stateColumn = column - yyleng; }
 <COMMENT>.				{ ; }
 <COMMENT>\n				{ ++line; column = 1; }
 <COMMENT>"*/"				{ BEGIN(INITIAL); }
-<COMMENT><<EOF>>			{ printf(ERROR_FORMAT("unterminated comment"), stateLine, stateColumn); yyterminate(); }
+<COMMENT><<EOF>>			{ PRINT_ERROR("unterminated comment", stateLine, stateColumn); yyterminate(); }
 
-\"              			{ BEGIN(STRING); string = buf; stateLine = line; stateColumn = column - yyleng; }
-<STRING>\\\"    			{ *string++ = '\\'; *string++ = '\"'; }
-<STRING>\\\\				{ *string++ = '\\'; *string++ = '\\'; }
-<STRING>\"      			{
-                			  *string = 0;
-					  BEGIN(INITIAL);
-					  lastToken = STRLIT;
-					  printf("STRLIT(\"%s\")\n", buf);
-                			}
-<STRING>\n      			{
-						printf(
-								ERROR_FORMAT("unterminated string literal"),
-								stateLine,
-								stateColumn,
-								yytext
-						      );
-						column = 1;
-						++line;
-						*string = '\0';
-						BEGIN(INITIAL);
-					}
-<STRING>\\[^fnrt\\\"]			{ printf(ERROR_FORMAT("invalid escape sequence (%s)"), line, column - yyleng, yytext); BEGIN(INVALID_STRING); }
-<STRING>.       			{ *string++ = *yytext; }
-<STRING><<EOF>>      			{
-						printf(
-								ERROR_FORMAT("unterminated string literal"),
-								stateLine,
-								stateColumn,
-								yytext
-						      );
-						*string = '\0';
-						yyterminate();
-					}
 
-<INVALID_STRING>.*\"			{ BEGIN(INITIAL); }
+
+\"				{
+					BEGIN(STR);
+					string = buf;
+					stateLine = line;
+					stateColumn = column - yyleng;
+				}
+<STR>\\\"			{ *string++ = '\\'; *string++ = '\"'; }
+<STR>\\\\			{ *string++ = '\\'; *string++ = '\\'; }
+<STR>\"				{
+					*string = '\0';
+					lastToken = STRLIT;
+					printf("STRLIT(\"%s\")\n", buf);
+					BEGIN(INITIAL);
+				}
+<STR>\n      			{
+					PRINT_ERROR("unterminated string literal", stateLine,stateColumn);
+					column = 1;
+					++line;
+					*string = '\0';
+					BEGIN(INITIAL);
+				}
+<STR>\\[^fnrt\\\"]		{
+					PRINT_ERROR("invalid escape sequence (%s)", line, column - yyleng, yytext);
+					BEGIN(INVALID_STR);
+				}
+
+
+<STR>.				{ *string++ = *yytext; }
+<STR><<EOF>>      		{
+					PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
+					*string = '\0';
+					yyterminate();
+				}
+
+<INVALID_STR>\\[^fnrt\\\"]	{ PRINT_ERROR("invalid escape sequence (%s)", line, column - yyleng, yytext); }
+<INVALID_STR>\\			{ *string++ = '\\'; }
+<INVALID_STR>\"			{ *string = '\0'; BEGIN(INITIAL); }
+<INVALID_STR>.			{ *string++ = *yytext; }
+<INVALID_STR>\n			{
+					PRINT_ERROR("unterminated string literal", stateLine,stateColumn);
+					column = 1;
+					++line;
+					*string = '\0';
+					BEGIN(INITIAL);
+				}
+
 
 {SEMICOLON}		{ lastToken = SEMICOLON; printLastToken(); }
 {COMMA}			{ lastToken = COMMA; printLastToken(); }
@@ -281,7 +296,7 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 
 {RESERVED}		{ lastToken = RESERVED; printLastToken(); }
 {NATURAL}		{ lastToken = NATURAL; printLastToken(); }
-{DECIMAL}		{ lastToken = DECIMAL; printLastToken(); /* TODO: Merge this rule into rule below */ }
+{DECIMAL}		{ lastToken = DECIMAL; printLastToken(); }
 {IDENTIFIER}		{ lastToken = IDENTIFIER; printLastToken(); }
 
 {lineterminator}	{
@@ -291,16 +306,17 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 				checkLastToken();
 				lastToken = OTHER;
 			}
-({whitespace}+|"//".*)			{;}
-0[089][0-9]*				{ printf(ERROR_FORMAT("invalid octal constant (%s)"), line, column - yyleng, yytext); }
-.					{ printf(ERROR_FORMAT("illegal character (%s)"), line, column - yyleng, yytext); }
-<<EOF>>					{
-						checkLastToken();
-						lastToken = OTHER;
-						yyterminate();
-					}
+({whitespace}+|"//".*)	{;}
+0[089][0-9]*		{ PRINT_ERROR("invalid octal constant (%s)", line, column - yyleng, yytext); }
+.			{ PRINT_ERROR("illegal character (%s)", line, column - yyleng, yytext); }
+<<EOF>>			{
+				checkLastToken();
+				lastToken = OTHER;
+				yyterminate();
+			}
 
 %%
+
 extern int yylex();
 int main() {
     yylex();    /* run the lexical analysis automaton */
