@@ -237,6 +237,7 @@ RESERVED		(break|default|func|interface|select|case|defer|go|map|struct|chan|els
 NATURAL			(0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)
 DECIMAL			({digit}+e[+-]?{digit}+|({digit}*"."{digit}+|{digit}+"."{digit}*)(e[+-]?{digit}+)?)
 IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
+INVALID_OCTAL		0[0-7]*[8-9]+[0-9]*
 
 %X COMMENT
 %X STR
@@ -349,7 +350,7 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 				lastToken = OTHER;
 			}
 ({whitespace}+|"//".*)	{;}
-0[089][0-9]*		{ PRINT_ERROR("invalid octal constant (%s)", line, column - yyleng, yytext); }
+{INVALID_OCTAL}		{ PRINT_ERROR("invalid octal constant (%s)", line, column - yyleng, yytext); }
 .			{ PRINT_ERROR("illegal character (%s)", line, column - yyleng, yytext); }
 <<EOF>>			{
 				checkLastToken();
