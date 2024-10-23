@@ -14,6 +14,7 @@
 
     char buf[4096];
     char *string = NULL;
+    bool isValidString = false;
 
     #define TOKENS_WITHOUT_FORMAT \
 	    TOKEN(SEMICOLON, "SEMICOLON") \
@@ -78,6 +79,7 @@
     Token lastToken = OTHER;
 
     void tokenPreHook(void);
+    void nextLine(void);
 
     void printLex(const char *token, const char *_string) {
     	(void) _string;
@@ -216,12 +218,11 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 
 %X COMMENT
 %X STR
-%X INVALID_STR
 
 %%
 "/*"					{ BEGIN(COMMENT); stateLine = line; stateColumn = column - yyleng; }
 <COMMENT>.				{ ; }
-<COMMENT>\n				{ ++line; column = 1; }
+<COMMENT>\n				{ nextLine(); }
 <COMMENT>"*/"				{ BEGIN(INITIAL); }
 <COMMENT><<EOF>>			{ PRINT_ERROR("unterminated comment", stateLine, stateColumn); yyterminate(); }
 
@@ -229,6 +230,7 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 
 \"				{
 					BEGIN(STR);
+					isValidString = true;
 					string = buf;
 					stateLine = line;
 					stateColumn = column - yyleng;
@@ -237,20 +239,33 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 <STR>\\\\			{ *string++ = '\\'; *string++ = '\\'; }
 <STR>\"				{
 					*string = '\0';
-					lastToken = STRLIT;
-					printLastToken();
+					if (isValidString) {
+						lastToken = STRLIT;
+						printLastToken();
+					}
 					BEGIN(INITIAL);
 				}
 <STR>\n      			{
 					PRINT_ERROR("unterminated string literal", stateLine,stateColumn);
-					column = 1;
-					++line;
+					nextLine();
 					*string = '\0';
 					BEGIN(INITIAL);
 				}
 <STR>\\[^fnrt\\\"]		{
+					const char escapeC = yytext[1];
+					if (escapeC == '\n' || escapeC == '\r' || escapeC == '\t' || escapeC == '\f') {
+						yytext[1] = '\0';
+					}
+
 					PRINT_ERROR("invalid escape sequence (%s)", line, column - yyleng, yytext);
-					BEGIN(INVALID_STR);
+					isValidString = false;
+
+					if (escapeC == '\n') {
+						PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
+						nextLine();
+						*string = '\0';
+						BEGIN(INITIAL);
+					}
 				}
 
 
@@ -260,19 +275,6 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 					*string = '\0';
 					yyterminate();
 				}
-
-<INVALID_STR>\\[^fnrt\\\"]	{ PRINT_ERROR("invalid escape sequence (%s)", line, column - yyleng, yytext); }
-<INVALID_STR>\\			{ *string++ = '\\'; }
-<INVALID_STR>\"			{ *string = '\0'; BEGIN(INITIAL); }
-<INVALID_STR>.			{ *string++ = *yytext; }
-<INVALID_STR>\n			{
-					PRINT_ERROR("unterminated string literal", stateLine,stateColumn);
-					column = 1;
-					++line;
-					*string = '\0';
-					BEGIN(INITIAL);
-				}
-
 
 {SEMICOLON}		{ lastToken = SEMICOLON; printLastToken(); }
 {COMMA}			{ lastToken = COMMA; printLastToken(); }
@@ -319,8 +321,7 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 {IDENTIFIER}		{ lastToken = IDENTIFIER; printLastToken(); }
 
 {lineterminator}	{
-				++line;
-				column = 1;
+				nextLine();
 
 				checkLastToken();
 				lastToken = OTHER;
@@ -351,4 +352,9 @@ int yywrap() {  /* called on EOF, return 1 to terminate */
 }
 void tokenPreHook() { /* called before every catched token */
 	column += yyleng;
+}
+
+void nextLine(void) {
+	++line;
+	column = 1;
 }
