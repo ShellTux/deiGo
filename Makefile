@@ -14,7 +14,7 @@ $(COMPILER_ZIP): src/gocompiler.l
 	zip --junk-paths $@ $^
 
 %.c: %.l
-	lex --outfile $@ $< 
+	lex --outfile $@ $<
 
 .PHONY: run
 run: $(COMPILER)
