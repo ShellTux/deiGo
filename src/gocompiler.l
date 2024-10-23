@@ -196,8 +196,7 @@ INVALID_OCTAL		0[0-7]*[8-9]+[0-9]*
 					stateLine = line;
 					stateColumn = column - yyleng;
 				}
-<STR>\\\"			{ stringAppend(&string, yytext); }
-<STR>\\\\			{ stringAppend(&string, yytext); }
+<STR>\\[\\\"]			{ stringAppend(&string, yytext); }
 <STR>\"				{
 					stringAppend(&string, "");
 					if (isValidString) {
