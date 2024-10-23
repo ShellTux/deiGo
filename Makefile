@@ -1,4 +1,5 @@
-CXXFLAGS = -Wall -Wextra -std=c++17
+CFLAGS  = -Wall -Wextra -Werror -std=c11
+CFLAGS += -Wno-unused-function -Wno-implicit-function-declaration
 
 COMPILER = bin/deigoc
 COMPILER_ZIP = gocompiler.zip
