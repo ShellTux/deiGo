@@ -19,6 +19,6 @@ $(COMPILER_ZIP): src/gocompiler.l
 run: $(COMPILER)
 	./$(COMPILER)
 
-.PHONY: run-tests
-run-tests: $(COMPILER)
+.PHONY: test
+test: $(COMPILER)
 	./test.sh
