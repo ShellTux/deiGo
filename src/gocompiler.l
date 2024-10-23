@@ -339,6 +339,10 @@ void printLexF(const char *format, const char *string) {
 }
 
 void printToken(const Token token) {
+	if (!debugMode) {
+		return;
+	}
+
 	// HACK: Fix
 	if (token == STRLIT) {
 		printf("STRLIT(\"%s\")\n", string.buffer);
@@ -374,10 +378,6 @@ void printToken(const Token token) {
 }
 
 void printLastToken(void) {
-	if (!debugMode) {
-		return;
-	}
-
 	printToken(lastToken);
 }
 
