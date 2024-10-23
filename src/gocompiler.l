@@ -25,6 +25,9 @@
 %{
     #include <ctype.h>
     #include <stdbool.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
 
     bool debugMode = false;
 
@@ -34,8 +37,16 @@
     int stateLine;
     int stateColumn;
 
-    char buf[4096];
-    char *string = NULL;
+    typedef struct {
+	    char *buffer;
+	    size_t length;
+	    size_t capacity;
+    } String;
+
+    void stringAppend(String *dest, const char *src);
+    void stringDestroy(String *string);
+
+    String string = {0};
     bool isValidString = false;
 
     #define TOKENS_WITHOUT_FORMAT \
@@ -181,14 +192,14 @@ INVALID_OCTAL		0[0-7]*[8-9]+[0-9]*
 \"				{
 					BEGIN(STR);
 					isValidString = true;
-					string = buf;
+					stringDestroy(&string);
 					stateLine = line;
 					stateColumn = column - yyleng;
 				}
-<STR>\\\"			{ *string++ = '\\'; *string++ = '\"'; }
-<STR>\\\\			{ *string++ = '\\'; *string++ = '\\'; }
+<STR>\\\"			{ stringAppend(&string, yytext); }
+<STR>\\\\			{ stringAppend(&string, yytext); }
 <STR>\"				{
-					*string = '\0';
+					stringAppend(&string, "");
 					if (isValidString) {
 						lastToken = STRLIT;
 						printLastToken();
@@ -198,7 +209,7 @@ INVALID_OCTAL		0[0-7]*[8-9]+[0-9]*
 <STR>\n      			{
 					PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
 					nextLine();
-					*string = '\0';
+					stringAppend(&string, "");
 					BEGIN(INITIAL);
 				}
 <STR>\\[^fnrt\\\"]		{
@@ -213,16 +224,16 @@ INVALID_OCTAL		0[0-7]*[8-9]+[0-9]*
 					if (escapeC == '\n') {
 						PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
 						nextLine();
-						*string = '\0';
+						stringAppend(&string, "");
 						BEGIN(INITIAL);
 					}
 				}
 
 
-<STR>.				{ *string++ = *yytext; }
+<STR>.				{ stringAppend(&string, yytext); }
 <STR><<EOF>>      		{
 					PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
-					*string = '\0';
+					stringAppend(&string, "");
 					yyterminate();
 				}
 
@@ -331,7 +342,7 @@ void printLexF(const char *format, const char *string) {
 void printToken(const Token token) {
 	// HACK: Fix
 	if (token == STRLIT) {
-		printf("STRLIT(\"%s\")\n", buf);
+		printf("STRLIT(\"%s\")\n", string.buffer);
 		return;
 	}
 
@@ -386,4 +397,44 @@ inline void checkLastToken(void) {
 		default:
 			break;
 	}
+}
+
+void stringAppend(String *dest, const char *src) {
+	if (dest == NULL || src == NULL) {
+		return;
+	}
+
+	const size_t srcLength = strlen(src);
+
+	if (dest->length + srcLength + 1 > dest->capacity) {
+		if (dest->capacity == 0) {
+			dest->capacity = 1;
+		}
+
+		while (dest->length + srcLength + 1 > dest->capacity) {
+			dest->capacity *= 2;
+		}
+
+		const bool clean = dest->buffer == NULL;
+		dest->buffer =
+			realloc(dest->buffer, dest->capacity * sizeof(dest->buffer[0]));
+
+		if (clean) {
+			*dest->buffer = '\0';
+		}
+	}
+
+	strcat(dest->buffer, src);
+	dest->length += srcLength;
+}
+
+void stringDestroy(String *string) {
+  if (string == NULL) {
+    return;
+  }
+
+  if (string->buffer != NULL) {
+	  free(string->buffer);
+  }
+  *string = (String){0};
 }
