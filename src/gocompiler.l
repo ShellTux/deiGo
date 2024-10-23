@@ -103,86 +103,13 @@
     void tokenPreHook(void);
     void nextLine(void);
 
-    void printLex(const char *token, const char *_string) {
-    	(void) _string;
-
-    	if (token == NULL) {
-		return;
-	}
-
-    	printf("%s\n", token);
-    }
-
-    void printLexF(const char *format, const char *string) {
-    	if (format == NULL || *format == '\0' || string == NULL || *string == '\0') {
-		return;
-	}
-
-	printf(format, string);
-	printf("\n");
-    }
+    inline void checkLastToken(void);
+    void printLastToken(void);
+    void printLex(const char *token, const char *_string);
+    void printLexF(const char *format, const char *string);
+    void printToken(const Token token);
 
     typedef void (*PrintLexFunction)(const char *, const char *);
-
-    void printToken(const Token token) {
-	// HACK: Fix
-    	if (token == STRLIT) {
-		printf("STRLIT(\"%s\")\n", buf);
-		return;
-	}
-
-	char *format = NULL;
-	char *string = NULL;
-
-	PrintLexFunction printF = NULL;
-	switch (token) {
-		#define TOKEN(NAME, STRING) \
-			case NAME: \
-				format = STRING; \
-				printF = printLex; \
-				break;
-		TOKENS_WITHOUT_FORMAT
-		#undef TOKEN
-		#define TOKEN(NAME, FORMAT) \
-			case NAME: \
-				format = FORMAT; \
-				string = yytext; \
-				printF = printLexF; \
-				break;
-		TOKENS_WITH_FORMAT
-		#undef TOKEN
-		default:
-			printf("Invalid Token\n");
-			break;
-	}
-
-	printF(format, string);
-    }
-
-    void printLastToken(void) {
-    	if (!debugMode) {
-		return;
-	}
-
-	printToken(lastToken);
-    }
-
-    inline void checkLastToken(void) {
-    	switch (lastToken) {
-		case NATURAL:
-		case DECIMAL:
-		case STRLIT:
-		case IDENTIFIER:
-		case RETURN:
-		case RPAR:
-		case RSQ:
-		case RBRACE:
-			printToken(SEMICOLON);
-			break;
-		default:
-		break;
-	}
-    }
 
     #define ERROR_FORMAT(MESSAGE) "Line %d, column %d: " MESSAGE "\n"
     #define PRINT_ERROR(FORMAT, ...) printf(ERROR_FORMAT(FORMAT), __VA_ARGS__)
@@ -380,4 +307,83 @@ void tokenPreHook() { /* called before every catched token */
 void nextLine(void) {
 	++line;
 	column = 1;
+}
+
+void printLex(const char *token, const char *_string) {
+	(void) _string;
+
+	if (token == NULL) {
+		return;
+	}
+
+	printf("%s\n", token);
+}
+
+void printLexF(const char *format, const char *string) {
+	if (format == NULL || *format == '\0' || string == NULL || *string == '\0') {
+		return;
+	}
+
+	printf(format, string);
+	printf("\n");
+}
+
+void printToken(const Token token) {
+	// HACK: Fix
+	if (token == STRLIT) {
+		printf("STRLIT(\"%s\")\n", buf);
+		return;
+	}
+
+	char *format = NULL;
+	char *string = NULL;
+
+	PrintLexFunction printF = NULL;
+	switch (token) {
+#define TOKEN(NAME, STRING) \
+		case NAME: \
+			   format = STRING; \
+		printF = printLex; \
+		break;
+		TOKENS_WITHOUT_FORMAT
+#undef TOKEN
+#define TOKEN(NAME, FORMAT) \
+		case NAME: \
+			   format = FORMAT; \
+			string = yytext; \
+			printF = printLexF; \
+			break;
+			TOKENS_WITH_FORMAT
+#undef TOKEN
+		default:
+			printf("Invalid Token\n");
+			break;
+	}
+
+	printF(format, string);
+}
+
+void printLastToken(void) {
+	if (!debugMode) {
+		return;
+	}
+
+	printToken(lastToken);
+}
+
+inline void checkLastToken(void) {
+	switch (lastToken) {
+		case NATURAL:
+		case DECIMAL:
+		case STRLIT:
+		case IDENTIFIER:
+		case RETURN:
+		case RPAR:
+		case RSQ:
+		case RBRACE:
+			printToken(SEMICOLON);
+			break;
+		default:
+			break;
+	}
 }
