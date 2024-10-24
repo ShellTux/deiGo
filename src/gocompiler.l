@@ -172,10 +172,12 @@ FUNC			"func"
 CMDARGS			"os\.Args"
 
 RESERVED		(break|default|func|interface|select|case|defer|go|map|struct|chan|else|goto|package|switch|const|fallthrough|if|range|type|continue|for|import|return|var|\+\+|--)
-NATURAL			(0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)
+NATURAL			(0|{HEXADECIMAL}|{OCTAL}|[1-9][0-9]*)
+HEXADECIMAL		0[xX][0-9a-fA-F]+
+OCTAL			0[0-7]+
 DECIMAL			({digit}+e[+-]?{digit}+|({digit}*"."{digit}+|{digit}+"."{digit}*)(e[+-]?{digit}+)?)
 IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
-INVALID_OCTAL		0[0-7]*[8-9]+[0-9]*
+INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 
 %X COMMENT
 %X STR
