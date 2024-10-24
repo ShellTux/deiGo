@@ -1,4 +1,4 @@
-Line 1, column 2: invalid escape sequence (\    )
+Line 1, column 2: invalid escape sequence (\	)
 Line 2, column 2: invalid escape sequence (\)
 Line 2, column 1: unterminated string literal
 Line 3, column 1: unterminated string literal
