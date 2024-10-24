@@ -215,7 +215,7 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 				}
 <STR>\\[^fnrt\\\"]		{
 					const char escapeC = yytext[1];
-					if (escapeC == '\n' || escapeC == '\r' || escapeC == '\f') {
+					if (escapeC == '\n' || escapeC == '\r') {
 						yytext[1] = '\0';
 					}
 
