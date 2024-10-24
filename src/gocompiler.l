@@ -175,7 +175,7 @@ RESERVED		(break|default|func|interface|select|case|defer|go|map|struct|chan|els
 NATURAL			(0|{HEXADECIMAL}|{OCTAL}|[1-9][0-9]*)
 HEXADECIMAL		0[xX][0-9a-fA-F]+
 OCTAL			0[0-7]+
-DECIMAL			({digit}+e[+-]?{digit}+|({digit}*"."{digit}+|{digit}+"."{digit}*)(e[+-]?{digit}+)?)
+DECIMAL			({digit}+[eE][+-]?{digit}+|({digit}*"."{digit}+|{digit}+"."{digit}*)([eE][+-]?{digit}+)?)
 IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 
@@ -215,7 +215,7 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 				}
 <STR>\\[^fnrt\\\"]		{
 					const char escapeC = yytext[1];
-					if (escapeC == '\n' || escapeC == '\r' || escapeC == '\t' || escapeC == '\f') {
+					if (escapeC == '\n' || escapeC == '\r' || escapeC == '\f') {
 						yytext[1] = '\0';
 					}
 
