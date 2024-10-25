@@ -7,6 +7,7 @@ COMPILER_ZIP = gocompiler.zip
 all: $(COMPILER)
 
 $(COMPILER): %: src/gocompiler.o
+	mkdir --parents "$(shell dirname "$@")"
 	$(CC) -o $@ $^
 
 $(COMPILER_ZIP): src/gocompiler.l

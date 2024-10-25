@@ -21,9 +21,6 @@
 # KIND, either express or implied.
 #
 ############################################################################
-# file: examples/equality_test.sh
-# This shell script only uses one bashism -> process substituition
-# The rest is posix compliant
 
 usage() {
 	echo "Usage: $0"
@@ -34,6 +31,8 @@ usage() {
 	echo ' -m, --metas, --goals        <Metas>                List of comma separated goal numbers (default: 1,2,3)'
 	echo ' -b, --binary, --compiler    <Compiler Path>        Path to the go compiler (default: ./bin/deigoc)'
 	echo ' -t, --test-dir              <Test Dir Base Path>   Path to base of tests (default: ./tests)'
+	echo ' -C, --color                 <never|always|auto>    Enable Color output (default: auto)'
+	echo ' -s, --summary                                      Brief summary printing only the list of passing and failing tests'
 	echo
 	echo 'Test Directory Structure:'
 	echo '<Test Dir Base Path>'
@@ -48,23 +47,27 @@ usage() {
 	echo '    └── example3.out'
 	echo
 	echo Examples:
+	echo "$0 --metas=1 --color=always | less --pattern='FAILED'"
 	echo "$0 --metas=1,2 --fail-on-first"
 	echo "$0 --fail-on-first | less"
 	exit 1
 }
 
+color=auto
+compiler=./bin/deigoc
 fail_on_first=false
 metas=1,2,3
-compiler=./bin/deigoc
+temp_file=/tmp/deigo-temp
 test_dir=./tests
+summary=false
 
 passed=0
 passed_tests=
 failed=0
 failed_tests=
 
-options='hfm:b:t:'
-long_options='help,fail-on-first,metas:,goals:,binary:,compiler:,test-dir:'
+options='hfm:b:t:C:s'
+long_options='help,fail-on-first,metas:,goals:,binary:,compiler:,test-dir:,color:,summary'
 TEMP=$(getopt \
 	--options $options \
 	--long  $long_options \
@@ -107,6 +110,16 @@ do
 			shift 2
 			continue
 			;;
+		-C | --color)
+			color="$2"
+			shift 2
+			continue
+			;;
+		-s | --summary)
+			summary=true
+			shift
+			continue
+			;;
 		--)
 			shift
 			break
@@ -120,27 +133,64 @@ done
 
 trap finish EXIT
 
+color_text() {
+	code="$1"
+	shift
+	text="$*"
+
+	case "$color" in
+		never) printf '%s' "$text" ;;
+		auto) test -t 1 && printf '\033[%dm%s\033[0m' "$code" "$text" || printf '%s' "$text"  ;;
+		always) printf '\033[%dm%s\033[0m' "$code" "$text" ;;
+	esac
+}
+
 testMessage() {
 	if [ "$?" -eq 0 ]
 	then
-		printf '\033[32m[PASSED]\033[0m: %s\n' "$1"
 		passed=$((passed + 1))
 		passed_tests="$passed_tests $1"
+		if ! $summary
+		then
+			color_text 32 '[PASSED]'
+			printf ': %s\n' "$1"
+		fi
 		return 0
 	else
-		printf '\033[31m[FAILED]\033[0m: %s\n' "$1"
 		failed=$((failed + 1))
 		failed_tests="$failed_tests $1"
+		if ! $summary
+		then
+			color_text 31 '[FAILED]'
+			printf ': %s\n' "$1"
+		fi
 		return 1
 	fi
 }
 
-diff() {
-	bash -c 'diff --brief '"$1"' <('"$compiler"' -l < '"$2"') >/dev/null'
+diff_posix() {
+	diff_args=
+	for arg
+	do
+		if (echo "$arg" | grep --quiet --extended-regexp --only-matching '^(-{1,2}[a-zA-Z]+)')
+		then
+			diff_args="$diff_args $arg"
+			shift
+		fi
+	done
 
-	if ! testMessage "$2"
+	"$compiler" -l < "$1" > "$temp_file"
+
+	# shellcheck disable=SC2086
+	command diff $diff_args "$temp_file" "$2"
+}
+
+diff() {
+	diff_posix --brief "$1" "$2" >/dev/null
+
+	if ! testMessage "$1" && ! $summary
 	then
-		bash -c 'diff --color=always --side-by-side <('"$compiler"' -l < '"$2"') '"$1"''
+		diff_posix --color="$color" --side-by-side "$1" "$2"
 		$fail_on_first && exit 1
 	fi
 }
@@ -149,25 +199,37 @@ unit_test() {
 	meta_n="$1"
 	test_name="$2"
 	file_base="$test_dir"/"meta$meta_n"/"$test_name"
-	diff "$file_base.out" "$file_base.dgo"
+	diff "$file_base.dgo" "$file_base.out"
 }
 
 finish() {
-	echo
-	printf 'Total tests done: %d\n' "$((passed + failed))"
-	printf '\033[032mPASSED:\033[0m %d\n' "$passed"
-	for t in $passed_tests
-	do
-		printf '  \033[32m\033[0m %s\n' "$t"
-	done
+	! $summary && echo
 
-	printf '\033[031mFAILED:\033[0m %d\n' "$failed"
-	for t in $failed_tests
-	do
-		printf '  \033[31m✗\033[0m %s\n' "$t"
-	done
+	if [ "$passed" -gt 0 ]
+	then
+		printf 'Total tests done: %d\n' "$((passed + failed))"
+		color_text 32 'PASSED:'
+		printf ' %d\n' "$passed"
+		for t in $passed_tests
+		do
+			printf '  '
+			color_text 32 
+			printf ' %s\n' "$t"
+		done
+	fi
+
+	if [ "$failed" -gt 0 ]
+	then
+		color_text 31 'FAILED:'
+		printf ' %d\n' "$failed"
+		for t in $failed_tests
+		do
+			printf '  '
+			color_text 31 ✗
+			printf ' %s\n' "$t"
+		done
+	fi
 }
-
 
 for meta in $(seq 1 3)
 do
@@ -175,7 +237,10 @@ do
 	test_meta_dir="$test_dir/meta$meta"
 	[ ! -d "$test_meta_dir" ] && continue
 
-	for t in $(find "$test_meta_dir" -type f -printf '%f\n' | grep --only-matching '^[^\.]\+\.dgo' | sort --unique | cut --delimiter='.' --fields=1)
+	for t in $(find "$test_meta_dir" -type f -printf '%f\n' \
+		| grep --only-matching '^[^\.]\+\.dgo' \
+		| sort --unique \
+		| cut --delimiter='.' --fields=1)
 	do
 		unit_test "$meta" "$t"
 	done
