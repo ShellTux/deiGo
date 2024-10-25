@@ -32,6 +32,7 @@ usage() {
 	echo ' -b, --binary, --compiler    <Compiler Path>        Path to the go compiler (default: ./bin/deigoc)'
 	echo ' -t, --test-dir              <Test Dir Base Path>   Path to base of tests (default: ./tests)'
 	echo ' -C, --color                 <never|always|auto>    Enable Color output (default: auto)'
+	echo ' -s, --summary                                      Brief summary without printing diff for failing tests'
 	echo
 	echo 'Test Directory Structure:'
 	echo '<Test Dir Base Path>'
@@ -58,14 +59,15 @@ fail_on_first=false
 metas=1,2,3
 temp_file=/tmp/deigo-temp
 test_dir=./tests
+summary=false
 
 passed=0
 passed_tests=
 failed=0
 failed_tests=
 
-options='hfm:b:t:C:'
-long_options='help,fail-on-first,metas:,goals:,binary:,compiler:,test-dir:,color:'
+options='hfm:b:t:C:s'
+long_options='help,fail-on-first,metas:,goals:,binary:,compiler:,test-dir:,color:,summary'
 TEMP=$(getopt \
 	--options $options \
 	--long  $long_options \
@@ -113,6 +115,11 @@ do
 			shift 2
 			continue
 			;;
+		-s | --summary)
+			summary=true
+			shift
+			continue
+			;;
 		--)
 			shift
 			break
@@ -141,16 +148,22 @@ color_text() {
 testMessage() {
 	if [ "$?" -eq 0 ]
 	then
-		color_text 32 '[PASSED]'
-		printf ': %s\n' "$1"
 		passed=$((passed + 1))
 		passed_tests="$passed_tests $1"
+		if ! $summary
+		then
+			color_text 32 '[PASSED]'
+			printf ': %s\n' "$1"
+		fi
 		return 0
 	else
-		color_text 31 '[FAILED]'
-		printf ': %s\n' "$1"
 		failed=$((failed + 1))
 		failed_tests="$failed_tests $1"
+		if ! $summary
+		then
+			color_text 31 '[FAILED]'
+			printf ': %s\n' "$1"
+		fi
 		return 1
 	fi
 }
@@ -175,7 +188,7 @@ diff_posix() {
 diff() {
 	diff_posix --brief "$1" "$2" >/dev/null
 
-	if ! testMessage "$1"
+	if ! testMessage "$1" && ! $summary
 	then
 		diff_posix --color="$color" --side-by-side "$1" "$2"
 		$fail_on_first && exit 1
@@ -190,7 +203,7 @@ unit_test() {
 }
 
 finish() {
-	echo
+	! $summary && echo
 
 	if [ "$passed" -gt 0 ]
 	then
