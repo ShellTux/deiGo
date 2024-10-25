@@ -31,6 +31,7 @@ usage() {
 	echo ' -m, --metas, --goals        <Metas>                List of comma separated goal numbers (default: 1,2,3)'
 	echo ' -b, --binary, --compiler    <Compiler Path>        Path to the go compiler (default: ./bin/deigoc)'
 	echo ' -t, --test-dir              <Test Dir Base Path>   Path to base of tests (default: ./tests)'
+	echo ' -C, --color                 <never|always|auto>    Enable Color output (default: auto)'
 	echo
 	echo 'Test Directory Structure:'
 	echo '<Test Dir Base Path>'
@@ -45,11 +46,13 @@ usage() {
 	echo '    └── example3.out'
 	echo
 	echo Examples:
+	echo "$0 --metas=1 --color=always | less --pattern='FAILED'"
 	echo "$0 --metas=1,2 --fail-on-first"
 	echo "$0 --fail-on-first | less"
 	exit 1
 }
 
+color=auto
 compiler=./bin/deigoc
 fail_on_first=false
 metas=1,2,3
@@ -61,8 +64,8 @@ passed_tests=
 failed=0
 failed_tests=
 
-options='hfm:b:t:'
-long_options='help,fail-on-first,metas:,goals:,binary:,compiler:,test-dir:'
+options='hfm:b:t:C:'
+long_options='help,fail-on-first,metas:,goals:,binary:,compiler:,test-dir:,color:'
 TEMP=$(getopt \
 	--options $options \
 	--long  $long_options \
@@ -105,6 +108,11 @@ do
 			shift 2
 			continue
 			;;
+		-C | --color)
+			color="$2"
+			shift 2
+			continue
+			;;
 		--)
 			shift
 			break
@@ -118,15 +126,29 @@ done
 
 trap finish EXIT
 
+color_text() {
+	code="$1"
+	shift
+	text="$*"
+
+	case "$color" in
+		never) printf '%s' "$text" ;;
+		auto) test -t 1 && printf '\033[%dm%s\033[0m' "$code" "$text" || printf '%s' "$text"  ;;
+		always) printf '\033[%dm%s\033[0m' "$code" "$text" ;;
+	esac
+}
+
 testMessage() {
 	if [ "$?" -eq 0 ]
 	then
-		printf '\033[32m[PASSED]\033[0m: %s\n' "$1"
+		color_text 32 '[PASSED]'
+		printf ': %s\n' "$1"
 		passed=$((passed + 1))
 		passed_tests="$passed_tests $1"
 		return 0
 	else
-		printf '\033[31m[FAILED]\033[0m: %s\n' "$1"
+		color_text 31 '[FAILED]'
+		printf ': %s\n' "$1"
 		failed=$((failed + 1))
 		failed_tests="$failed_tests $1"
 		return 1
@@ -155,7 +177,7 @@ diff() {
 
 	if ! testMessage "$1"
 	then
-		diff_posix --color=always --side-by-side "$1" "$2"
+		diff_posix --color="$color" --side-by-side "$1" "$2"
 		$fail_on_first && exit 1
 	fi
 }
@@ -169,20 +191,32 @@ unit_test() {
 
 finish() {
 	echo
-	printf 'Total tests done: %d\n' "$((passed + failed))"
-	printf '\033[032mPASSED:\033[0m %d\n' "$passed"
-	for t in $passed_tests
-	do
-		printf '  \033[32m\033[0m %s\n' "$t"
-	done
 
-	printf '\033[031mFAILED:\033[0m %d\n' "$failed"
-	for t in $failed_tests
-	do
-		printf '  \033[31m✗\033[0m %s\n' "$t"
-	done
+	if [ "$passed" -gt 0 ]
+	then
+		printf 'Total tests done: %d\n' "$((passed + failed))"
+		color_text 32 'PASSED:'
+		printf ' %d\n' "$passed"
+		for t in $passed_tests
+		do
+			printf '  '
+			color_text 32 
+			printf ' %s\n' "$t"
+		done
+	fi
+
+	if [ "$failed" -gt 0 ]
+	then
+		color_text 31 'FAILED:'
+		printf ' %d\n' "$failed"
+		for t in $failed_tests
+		do
+			printf '  '
+			color_text 31 ✗
+			printf ' %s\n' "$t"
+		done
+	fi
 }
-
 
 for meta in $(seq 1 3)
 do
