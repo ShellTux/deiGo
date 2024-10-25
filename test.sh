@@ -32,7 +32,7 @@ usage() {
 	echo ' -b, --binary, --compiler    <Compiler Path>        Path to the go compiler (default: ./bin/deigoc)'
 	echo ' -t, --test-dir              <Test Dir Base Path>   Path to base of tests (default: ./tests)'
 	echo ' -C, --color                 <never|always|auto>    Enable Color output (default: auto)'
-	echo ' -s, --summary                                      Brief summary without printing diff for failing tests'
+	echo ' -s, --summary                                      Brief summary printing only the list of passing and failing tests'
 	echo
 	echo 'Test Directory Structure:'
 	echo '<Test Dir Base Path>'
