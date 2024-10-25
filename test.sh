@@ -224,7 +224,10 @@ do
 	test_meta_dir="$test_dir/meta$meta"
 	[ ! -d "$test_meta_dir" ] && continue
 
-	for t in $(find "$test_meta_dir" -type f -printf '%f\n' | grep --only-matching '^[^\.]\+\.dgo' | sort --unique | cut --delimiter='.' --fields=1)
+	for t in $(find "$test_meta_dir" -type f -printf '%f\n' \
+		| grep --only-matching '^[^\.]\+\.dgo' \
+		| sort --unique \
+		| cut --delimiter='.' --fields=1)
 	do
 		unit_test "$meta" "$t"
 	done
