@@ -1,7 +1,35 @@
-/* Luís Pedro de Sousa Oliveira Góis 2018280716 */
 /* João Fonseca 2021227194 */
+/* Luís Pedro de Sousa Oliveira Góis 2018280716 */
+/***************************************************************************
+ * Project                                           _      _  ____
+ *                                                __| | ___(_)/ ___| ___
+ *                                               / _` |/ _ \ | |  _ / _ \
+ *                                              | (_| |  __/ | |_| | (_) |
+ *                                               \__,_|\___|_|\____|\___/
+ *
+ *
+ *
+ * Authors: João Fonseca, Luís Góis
+ *
+ * This software is licensed as described in the file LICENSE, which
+ * you should have received as part of this distribution.
+ *
+ * You may opt to use, copy, modify, merge, publish, distribute and/or sell
+ * copies of the Software, and permit persons to whom the Software is
+ * furnished to do so, under the terms of the LICENSE file.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ***************************************************************************/
 %{
     #include <ctype.h>
+    #include <stdbool.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <string.h>
+
+    bool debugMode = false;
 
     int line = 1;
     int column = 1;
@@ -9,8 +37,17 @@
     int stateLine;
     int stateColumn;
 
-    char buf[4096];
-    char *string = NULL;
+    typedef struct {
+	    char *buffer;
+	    size_t length;
+	    size_t capacity;
+    } String;
+
+    void stringAppend(String *dest, const char *src);
+    void stringDestroy(String *string);
+
+    String string = {0};
+    bool isValidString = false;
 
     #define TOKENS_WITHOUT_FORMAT \
 	    TOKEN(SEMICOLON, "SEMICOLON") \
@@ -52,11 +89,11 @@
 	    TOKEN(FUNC, "FUNC") \
 	    TOKEN(CMDARGS, "CMDARGS")
 	#define TOKENS_WITH_FORMAT \
-	    TOKEN(RESERVED, "RESERVED") \
-	    TOKEN(NATURAL, "NATURAL") \
-	    TOKEN(DECIMAL, "DECIMAL") \
-	    TOKEN(IDENTIFIER, "IDENTIFIER") \
-	    TOKEN(STRLIT, "STRLIT")
+	    TOKEN(RESERVED, "RESERVED(%s)") \
+	    TOKEN(NATURAL, "NATURAL(%s)") \
+	    TOKEN(DECIMAL, "DECIMAL(%s)") \
+	    TOKEN(IDENTIFIER, "IDENTIFIER(%s)") \
+	    TOKEN(STRLIT, "STRLIT(\"%s\")")
 
 
 	#define TOKENS \
@@ -75,73 +112,18 @@
     Token lastToken = OTHER;
 
     void tokenPreHook(void);
+    void nextLine(void);
 
-    void printLex(const char *token) {
-    	if (token == NULL) {
-		return;
-	}
+    void checkLastToken(void);
+    void printLastToken(void);
+    void printLex(const char *token, const char *_string);
+    void printLexF(const char *format, const char *string);
+    void printToken(const Token token);
 
-    	printf("%s\n", token);
-    }
-
-    void printLexF(const char *token) {
-    	if (token == NULL) {
-		return;
-	}
-
-	printf("%s(%s)\n", token, yytext);
-    }
-
-    typedef void (*PrintLexFunction)(const char *);
-
-    void printToken(const Token token) {
-	char *string = NULL;
-	PrintLexFunction printF = NULL;
-	switch (token) {
-		#define TOKEN(NAME, STRING) \
-			case NAME: \
-				string = STRING; \
-				printF = printLex; \
-				break;
-		TOKENS_WITHOUT_FORMAT
-		#undef TOKEN
-		#define TOKEN(NAME, STRING) \
-			case NAME: \
-				string = STRING; \
-				printF = printLexF; \
-				break;
-		TOKENS_WITH_FORMAT
-		#undef TOKEN
-		default:
-			printf("Invalid Token\n");
-			break;
-	}
-
-	printF(string);
-    }
-
-    void printLastToken(void) {
-	printToken(lastToken);
-    }
-
-    inline void checkLastToken(void) {
-    	switch (lastToken) {
-		case NATURAL:
-		case DECIMAL:
-		case STRLIT:
-		case IDENTIFIER:
-		case RETURN:
-		case RPAR:
-		case RSQ:
-		case RBRACE:
-			printToken(SEMICOLON);
-			break;
-		default:
-		break;
-	}
-    }
+    typedef void (*PrintLexFunction)(const char *, const char *);
 
     #define ERROR_FORMAT(MESSAGE) "Line %d, column %d: " MESSAGE "\n"
+    #define PRINT_ERROR(FORMAT, ...) printf(ERROR_FORMAT(FORMAT), __VA_ARGS__)
     #define YY_USER_ACTION tokenPreHook();
 %}
 
@@ -190,55 +172,71 @@ FUNC			"func"
 CMDARGS			"os\.Args"
 
 RESERVED		(break|default|func|interface|select|case|defer|go|map|struct|chan|else|goto|package|switch|const|fallthrough|if|range|type|continue|for|import|return|var|\+\+|--)
-NATURAL			(0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)
-DECIMAL			({digit}+e[+-]?{digit}+|({digit}*"."{digit}+|{digit}+"."{digit}*)(e[+-]?{digit}+)?)
+NATURAL			(0|{HEXADECIMAL}|{OCTAL}|[1-9][0-9]*)
+HEXADECIMAL		0[xX][0-9a-fA-F]+
+OCTAL			0[0-7]+
+DECIMAL			({digit}+[eE][+-]?{digit}+|({digit}*"."{digit}+|{digit}+"."{digit}*)([eE][+-]?{digit}+)?)
 IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
+INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 
 %X COMMENT
-%X STRING
-%X INVALID_STRING
+%X STR
+
 %%
 "/*"					{ BEGIN(COMMENT); stateLine = line; stateColumn = column - yyleng; }
 <COMMENT>.				{ ; }
-<COMMENT>\n				{ ++line; column = 1; }
+<COMMENT>\n				{ nextLine(); }
 <COMMENT>"*/"				{ BEGIN(INITIAL); }
-<COMMENT><<EOF>>			{ printf(ERROR_FORMAT("unterminated comment"), stateLine, stateColumn); yyterminate(); }
+<COMMENT><<EOF>>			{ PRINT_ERROR("unterminated comment", stateLine, stateColumn); yyterminate(); }
 
-\"              			{ BEGIN(STRING); string = buf; stateLine = line; stateColumn = column - yyleng; }
-<STRING>\\\"    			{ *string++ = '\\'; *string++ = '\"'; }
-<STRING>\\\\				{ *string++ = '\\'; *string++ = '\\'; }
-<STRING>\"      			{
-                			  *string = 0;
-					  BEGIN(INITIAL);
-					  lastToken = STRLIT;
-					  printf("STRLIT(\"%s\")\n", buf);
-                			}
-<STRING>\n      			{
-						printf(
-								ERROR_FORMAT("unterminated string literal"),
-								stateLine,
-								stateColumn,
-								yytext
-						      );
-						column = 1;
-						++line;
-						*string = '\0';
+
+
+\"				{
+					BEGIN(STR);
+					isValidString = true;
+					stringDestroy(&string);
+					stateLine = line;
+					stateColumn = column - yyleng;
+				}
+<STR>\\[\\\"]			{ stringAppend(&string, yytext); }
+<STR>\"				{
+					stringAppend(&string, "");
+					if (isValidString) {
+						lastToken = STRLIT;
+						printLastToken();
+					}
+					BEGIN(INITIAL);
+				}
+<STR>\n      			{
+					PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
+					nextLine();
+					stringAppend(&string, "");
+					BEGIN(INITIAL);
+				}
+<STR>\\[^fnrt\\\"]		{
+					const char escapeC = yytext[1];
+					if (escapeC == '\n' || escapeC == '\r') {
+						yytext[1] = '\0';
+					}
+
+					PRINT_ERROR("invalid escape sequence (%s)", line, column - yyleng, yytext);
+					isValidString = false;
+
+					if (escapeC == '\n') {
+						PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
+						nextLine();
+						stringAppend(&string, "");
 						BEGIN(INITIAL);
 					}
-<STRING>\\[^fnrt\\\"]			{ printf(ERROR_FORMAT("invalid escape sequence (%s)"), line, column - yyleng, yytext); BEGIN(INVALID_STRING); }
-<STRING>.       			{ *string++ = *yytext; }
-<STRING><<EOF>>      			{
-						printf(
-								ERROR_FORMAT("unterminated string literal"),
-								stateLine,
-								stateColumn,
-								yytext
-						      );
-						*string = '\0';
-						yyterminate();
-					}
+				}
 
-<INVALID_STRING>.*\"			{ BEGIN(INITIAL); }
+
+<STR>.				{ stringAppend(&string, yytext); }
+<STR><<EOF>>      		{
+					PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
+					stringAppend(&string, "");
+					yyterminate();
+				}
 
 {SEMICOLON}		{ lastToken = SEMICOLON; printLastToken(); }
 {COMMA}			{ lastToken = COMMA; printLastToken(); }
@@ -281,34 +279,163 @@ IDENTIFIER		({letter}|_)({letter}|{digit}|_)*
 
 {RESERVED}		{ lastToken = RESERVED; printLastToken(); }
 {NATURAL}		{ lastToken = NATURAL; printLastToken(); }
-{DECIMAL}		{ lastToken = DECIMAL; printLastToken(); /* TODO: Merge this rule into rule below */ }
+{DECIMAL}		{ lastToken = DECIMAL; printLastToken(); }
 {IDENTIFIER}		{ lastToken = IDENTIFIER; printLastToken(); }
 
 {lineterminator}	{
-				++line;
-				column = 1;
+				nextLine();
 
 				checkLastToken();
 				lastToken = OTHER;
 			}
-({whitespace}+|"//".*)			{;}
-0[089][0-9]*				{ printf(ERROR_FORMAT("invalid octal constant (%s)"), line, column - yyleng, yytext); }
-.					{ printf(ERROR_FORMAT("illegal character (%s)"), line, column - yyleng, yytext); }
-<<EOF>>					{
-						checkLastToken();
-						lastToken = OTHER;
-						yyterminate();
-					}
+({whitespace}+|"//".*)	{;}
+{INVALID_OCTAL}		{ PRINT_ERROR("invalid octal constant (%s)", line, column - yyleng, yytext); }
+.			{ PRINT_ERROR("illegal character (%s)", line, column - yyleng, yytext); }
+<<EOF>>			{
+				checkLastToken();
+				lastToken = OTHER;
+				yyterminate();
+			}
 
 %%
+
 extern int yylex();
-int main() {
-    yylex();    /* run the lexical analysis automaton */
-    return 0;
+int main(int argc, char **argv) {
+	for (int i = 1; i < argc; ++i) {
+		const char *arg = argv[i];
+
+		debugMode |= strcmp("-l", arg) == 0;
+	}
+	yylex();
+	return 0;
 }
 int yywrap() {  /* called on EOF, return 1 to terminate */
     return 1;
 }
 void tokenPreHook() { /* called before every catched token */
 	column += yyleng;
+}
+
+void nextLine(void) {
+	++line;
+	column = 1;
+}
+
+void printLex(const char *token, const char *_string) {
+	(void) _string;
+
+	if (token == NULL) {
+		return;
+	}
+
+	printf("%s\n", token);
+}
+
+void printLexF(const char *format, const char *string) {
+	if (format == NULL || *format == '\0' || string == NULL || *string == '\0') {
+		return;
+	}
+
+	printf(format, string);
+	printf("\n");
+}
+
+void printToken(const Token token) {
+	if (!debugMode) {
+		return;
+	}
+
+	// HACK: Fix
+	if (token == STRLIT) {
+		printf("STRLIT(\"%s\")\n", string.buffer);
+		return;
+	}
+
+	char *format = NULL;
+	char *string = NULL;
+
+	PrintLexFunction printF = NULL;
+	switch (token) {
+#define TOKEN(NAME, STRING) \
+		case NAME: \
+			   format = STRING; \
+		printF = printLex; \
+		break;
+		TOKENS_WITHOUT_FORMAT
+#undef TOKEN
+#define TOKEN(NAME, FORMAT) \
+		case NAME: \
+			   format = FORMAT; \
+			string = yytext; \
+			printF = printLexF; \
+			break;
+			TOKENS_WITH_FORMAT
+#undef TOKEN
+		default:
+			printf("Invalid Token\n");
+			break;
+	}
+
+	printF(format, string);
+}
+
+void printLastToken(void) {
+	printToken(lastToken);
+}
+
+inline void checkLastToken(void) {
+	switch (lastToken) {
+		case NATURAL:
+		case DECIMAL:
+		case STRLIT:
+		case IDENTIFIER:
+		case RETURN:
+		case RPAR:
+		case RSQ:
+		case RBRACE:
+			printToken(SEMICOLON);
+			break;
+		default:
+			break;
+	}
+}
+
+void stringAppend(String *dest, const char *src) {
+	if (dest == NULL || src == NULL) {
+		return;
+	}
+
+	const size_t srcLength = strlen(src);
+
+	if (dest->length + srcLength + 1 > dest->capacity) {
+		if (dest->capacity == 0) {
+			dest->capacity = 1;
+		}
+
+		while (dest->length + srcLength + 1 > dest->capacity) {
+			dest->capacity *= 2;
+		}
+
+		const bool clean = dest->buffer == NULL;
+		dest->buffer =
+			realloc(dest->buffer, dest->capacity * sizeof(dest->buffer[0]));
+
+		if (clean) {
+			*dest->buffer = '\0';
+		}
+	}
+
+	strcat(dest->buffer, src);
+	dest->length += srcLength;
+}
+
+void stringDestroy(String *string) {
+  if (string == NULL) {
+    return;
+  }
+
+  if (string->buffer != NULL) {
+	  free(string->buffer);
+  }
+  *string = (String){0};
 }

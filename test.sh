@@ -136,11 +136,11 @@ testMessage() {
 }
 
 diff() {
-	bash -c 'diff --brief '"$1"' <('"$compiler"' < '"$2"') >/dev/null'
+	bash -c 'diff --brief '"$1"' <('"$compiler"' -l < '"$2"') >/dev/null'
 
 	if ! testMessage "$2"
 	then
-		bash -c 'diff --color=always --side-by-side <('"$compiler"' < '"$2"') '"$1"''
+		bash -c 'diff --color=always --side-by-side <('"$compiler"' -l < '"$2"') '"$1"''
 		$fail_on_first && exit 1
 	fi
 }

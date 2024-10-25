@@ -1,7 +1,3 @@
-.direnv
-bin
-gocompiler.zip
-
 # Created by https://www.toptal.com/developers/gitignore/api/c
 # Edit at https://www.toptal.com/developers/gitignore?templates=c
 
@@ -98,3 +94,9 @@ dkms.conf
 *.app
 
 # End of https://www.toptal.com/developers/gitignore/api/c++
+
+.direnv
+.env
+bin
+gocompiler.zip
+!tests/meta*/*.out
