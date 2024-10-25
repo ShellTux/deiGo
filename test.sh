@@ -21,9 +21,6 @@
 # KIND, either express or implied.
 #
 ############################################################################
-# file: examples/equality_test.sh
-# This shell script only uses one bashism -> process substituition
-# The rest is posix compliant
 
 usage() {
 	echo "Usage: $0"
@@ -53,9 +50,10 @@ usage() {
 	exit 1
 }
 
+compiler=./bin/deigoc
 fail_on_first=false
 metas=1,2,3
-compiler=./bin/deigoc
+temp_file=/tmp/deigo-temp
 test_dir=./tests
 
 passed=0
@@ -135,12 +133,29 @@ testMessage() {
 	fi
 }
 
-diff() {
-	bash -c 'diff --brief '"$1"' <('"$compiler"' -l < '"$2"') >/dev/null'
+diff_posix() {
+	diff_args=
+	for arg
+	do
+		if (echo "$arg" | grep --quiet --extended-regexp --only-matching '^(-{1,2}[a-zA-Z]+)')
+		then
+			diff_args="$diff_args $arg"
+			shift
+		fi
+	done
 
-	if ! testMessage "$2"
+	"$compiler" -l < "$1" > "$temp_file"
+
+	# shellcheck disable=SC2086
+	command diff $diff_args "$temp_file" "$2"
+}
+
+diff() {
+	diff_posix --brief "$1" "$2" >/dev/null
+
+	if ! testMessage "$1"
 	then
-		bash -c 'diff --color=always --side-by-side <('"$compiler"' -l < '"$2"') '"$1"''
+		diff_posix --color=always --side-by-side "$1" "$2"
 		$fail_on_first && exit 1
 	fi
 }
@@ -149,7 +164,7 @@ unit_test() {
 	meta_n="$1"
 	test_name="$2"
 	file_base="$test_dir"/"meta$meta_n"/"$test_name"
-	diff "$file_base.out" "$file_base.dgo"
+	diff "$file_base.dgo" "$file_base.out"
 }
 
 finish() {
