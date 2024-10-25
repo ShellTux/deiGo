@@ -3,6 +3,8 @@ id1	AA\\VV	/* // comentario2 */
 id2 " unterminated string
 "string" .
 id3  /*
-comentario */08 0288 0287
-id4 /*  unterminated 
+comentario */
+08 0288 0287820
+id4
+     /*  unterminated
 comment
