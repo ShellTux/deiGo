@@ -29,13 +29,7 @@
     #include <stdlib.h>
     #include <string.h>
 
-    bool debugMode = false;
-
-    int line = 1;
-    int column = 1;
-
-    int stateLine;
-    int stateColumn;
+    #include "yy.h"
 
     typedef struct {
 	    char *buffer;
@@ -298,20 +292,10 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 			}
 
 %%
-
-extern int yylex();
-int main(int argc, char **argv) {
-	for (int i = 1; i < argc; ++i) {
-		const char *arg = argv[i];
-
-		debugMode |= strcmp("-l", arg) == 0;
-	}
-	yylex();
-	return 0;
-}
 int yywrap() {  /* called on EOF, return 1 to terminate */
     return 1;
 }
+
 void tokenPreHook() { /* called before every catched token */
 	column += yyleng;
 }
@@ -341,7 +325,7 @@ void printLexF(const char *format, const char *string) {
 }
 
 void printToken(const Token token) {
-	if (!debugMode) {
+	if (debugMode & Lexer) {
 		return;
 	}
 
