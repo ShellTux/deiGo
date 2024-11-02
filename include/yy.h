@@ -8,8 +8,8 @@ void usage(const char *programName);
 
 typedef enum {
   None = 0,
-  Lexer = 1 << 1,
-  Parser = 1 << 2,
+  Lexer = 1 << 0,
+  Parser = 1 << 1,
 } DebugMode;
 
 extern DebugMode debugMode;

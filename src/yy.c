@@ -27,8 +27,8 @@ int main(int argc, char **argv) {
       usage(argv[0]);
     }
 
-    debugMode |= Lexer & (strcmp("-l", arg) == 0);
-    debugMode |= Parser & (strcmp("-t", arg) == 0);
+    debugMode |= Lexer * (strcmp("-l", arg) == 0);
+    debugMode |= Parser * (strcmp("-t", arg) == 0);
   }
 
   yylex();

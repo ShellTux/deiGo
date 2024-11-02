@@ -325,7 +325,7 @@ void printLexF(const char *format, const char *string) {
 }
 
 void printToken(const Token token) {
-	if (debugMode & Lexer) {
+	if (!(debugMode & Lexer)) {
 		return;
 	}
 

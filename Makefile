@@ -50,7 +50,7 @@ run: $(COMPILER)
 
 .PHONY: test
 test: $(COMPILER)
-	./test.sh --metas=1 --color=always
+	./test.sh --metas=1,2 --color=always
 
 .PHONY: clean
 clean:
