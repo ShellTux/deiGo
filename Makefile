@@ -3,7 +3,7 @@ FLEX  = flex
 BISON = bison
 
 LEX_SRC  = src/gocompiler.l
-YACC_SRC = src/parser.y
+YACC_SRC = src/gocompiler.y
 
 LEX_OUTPUT  = bin/lex.yy.c
 YACC_OUTPUT = bin/parser.tab.c
@@ -14,6 +14,7 @@ CFLAGS  = -Wall -Wextra -Werror
 CFLAGS += -Wno-unused-function
 CFLAGS += -Wno-implicit-function-declaration
 CFLAGS += -I$(shell realpath include)
+CFLAGS += -I$(shell realpath bin)
 
 COMPILER = bin/deigoc
 COMPILER_SRC = \
