@@ -41,8 +41,8 @@ $(COMPILER_ZIP): src/gocompiler.l
 	rm --force $@
 	zip --junk-paths $@ $^
 
-%.c: %.l
-	lex --outfile $@ $<
+src/gocompiler.c:
+	@echo "[Excluding $@ from implicit rules]"
 
 .PHONY: run
 run: $(COMPILER)
