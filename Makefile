@@ -20,8 +20,7 @@ COMPILER = bin/deigoc
 COMPILER_SRC = \
 	       $(LEX_OUTPUT) \
 	       $(YACC_OUTPUT) \
-	       src/ast.c \
-	       src/yy.c
+	       src/gocompiler.c
 COMPILER_ZIP = gocompiler.zip
 
 all: $(COMPILER)
@@ -56,6 +55,7 @@ test: $(COMPILER)
 .PHONY: clean
 clean:
 	find . -type f -iname "*.o" -exec rm --force "{}" \;
+	find ./bin -type f -exec rm --force "{}" \;
 	rm --force $(COMPILER) $(COMPILER_ZIP)
 
 .PHONY: .clangd

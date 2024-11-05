@@ -29,96 +29,30 @@
     #include <stdlib.h>
     #include <string.h>
 
-    #include "yy.h"
-
-    typedef struct {
-	    char *buffer;
-	    size_t length;
-	    size_t capacity;
-    } String;
-
-    void stringAppend(String *dest, const char *src);
-    void stringDestroy(String *string);
-
-    String string = {0};
-    bool isValidString = false;
-
-    #define TOKENS_WITHOUT_FORMAT \
-	    TOKEN(SEMICOLON, "SEMICOLON") \
-	    TOKEN(COMMA, "COMMA") \
-	    TOKEN(BLANKID, "BLANKID") \
-	    TOKEN(ASSIGN, "ASSIGN") \
-	    TOKEN(STAR, "STAR") \
-	    TOKEN(DIV, "DIV") \
-	    TOKEN(MINUS, "MINUS") \
-	    TOKEN(PLUS, "PLUS") \
-	    TOKEN(EQ, "EQ") \
-	    TOKEN(GE, "GE") \
-	    TOKEN(GT, "GT") \
-	    TOKEN(LBRACE, "LBRACE") \
-	    TOKEN(LE, "LE") \
-	    TOKEN(LPAR, "LPAR") \
-	    TOKEN(LSQ, "LSQ") \
-	    TOKEN(LT, "LT") \
-	    TOKEN(MOD, "MOD") \
-	    TOKEN(NE, "NE") \
-	    TOKEN(NOT, "NOT") \
-	    TOKEN(AND, "AND") \
-	    TOKEN(OR, "OR") \
-	    TOKEN(RBRACE, "RBRACE") \
-	    TOKEN(RPAR, "RPAR") \
-	    TOKEN(RSQ, "RSQ") \
-	    TOKEN(PACKAGE, "PACKAGE") \
-	    TOKEN(RETURN, "RETURN") \
-	    TOKEN(ELSE, "ELSE") \
-	    TOKEN(FOR, "FOR") \
-	    TOKEN(IF, "IF") \
-	    TOKEN(VAR, "VAR") \
-	    TOKEN(INT, "INT") \
-	    TOKEN(FLOAT32, "FLOAT32") \
-	    TOKEN(BOOL, "BOOL") \
-	    TOKEN(STRING, "STRING") \
-	    TOKEN(PRINT, "PRINT") \
-	    TOKEN(PARSEINT, "PARSEINT") \
-	    TOKEN(FUNC, "FUNC") \
-	    TOKEN(CMDARGS, "CMDARGS")
-	#define TOKENS_WITH_FORMAT \
-	    TOKEN(RESERVED, "RESERVED(%s)") \
-	    TOKEN(NATURAL, "NATURAL(%s)") \
-	    TOKEN(DECIMAL, "DECIMAL(%s)") \
-	    TOKEN(IDENTIFIER, "IDENTIFIER(%s)") \
-	    TOKEN(STRLIT, "STRLIT(\"%s\")")
-
-
-	#define TOKENS \
-		TOKENS_WITHOUT_FORMAT \
-		TOKENS_WITH_FORMAT
-
-    typedef enum {
-	    OTHER,
-
-	    #define TOKEN(NAME, STRING) \
-	    	NAME,
-		TOKENS
-		#undef TOKEN
-    } Token;
-
-    Token lastToken = OTHER;
-
-    void tokenPreHook(void);
-    void nextLine(void);
-
-    void checkLastToken(void);
-    void printLastToken(void);
-    void printLex(const char *token, const char *_string);
-    void printLexF(const char *format, const char *string);
-    void printToken(const Token token);
-
-    typedef void (*PrintLexFunction)(const char *, const char *);
+    #include "gocompiler.h"
+    #include "y.tab.h"
 
     #define ERROR_FORMAT(MESSAGE) "Line %d, column %d: " MESSAGE "\n"
     #define PRINT_ERROR(FORMAT, ...) printf(ERROR_FORMAT(FORMAT), __VA_ARGS__)
     #define YY_USER_ACTION tokenPreHook();
+    #define PASS_TOKEN() { yylval.lexeme = strdup(yytext); }
+
+    bool isValidString = false;
+    String string = {0};
+    LexerToken lastToken = L_OTHER;
+    extern DebugMode debugMode;
+
+    Pos lexerPos = {
+    	.line = 1,
+	.column = 1,
+    };
+
+    Pos statePos = {
+    	.line = -1,
+	.column = -1,
+    };
+
+    Pos syntaxPos;
 %}
 
 digit			[0-9]
@@ -177,11 +111,18 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 %X STR
 
 %%
-"/*"					{ BEGIN(COMMENT); stateLine = line; stateColumn = column - yyleng; }
+"/*"					{
+						BEGIN(COMMENT);
+
+						statePos = (Pos){
+							.line = lexerPos.line,
+							.column = lexerPos.column - yyleng,
+						};
+					}
 <COMMENT>.				{ ; }
 <COMMENT>\n				{ nextLine(); }
 <COMMENT>"*/"				{ BEGIN(INITIAL); }
-<COMMENT><<EOF>>			{ PRINT_ERROR("unterminated comment", stateLine, stateColumn); yyterminate(); }
+<COMMENT><<EOF>>			{ PRINT_ERROR("unterminated comment", statePos.line, statePos.column); yyterminate(); }
 
 
 
@@ -189,20 +130,22 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 					BEGIN(STR);
 					isValidString = true;
 					stringDestroy(&string);
-					stateLine = line;
-					stateColumn = column - yyleng;
+					statePos = (Pos){
+						.line = lexerPos.line,
+						.column = lexerPos.column - yyleng,
+					};
 				}
 <STR>\\[\\\"]			{ stringAppend(&string, yytext); }
 <STR>\"				{
 					stringAppend(&string, "");
 					if (isValidString) {
-						lastToken = STRLIT;
+						lastToken = L_STRLIT;
 						printLastToken();
 					}
 					BEGIN(INITIAL);
 				}
 <STR>\n      			{
-					PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
+					PRINT_ERROR("unterminated string literal", statePos.line, statePos.column);
 					nextLine();
 					stringAppend(&string, "");
 					BEGIN(INITIAL);
@@ -213,11 +156,11 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 						yytext[1] = '\0';
 					}
 
-					PRINT_ERROR("invalid escape sequence (%s)", line, column - yyleng, yytext);
+					PRINT_ERROR("invalid escape sequence (%s)", lexerPos.line, lexerPos.column - yyleng, yytext);
 					isValidString = false;
 
 					if (escapeC == '\n') {
-						PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
+						PRINT_ERROR("unterminated string literal", statePos.line, statePos.column);
 						nextLine();
 						stringAppend(&string, "");
 						BEGIN(INITIAL);
@@ -227,67 +170,67 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 
 <STR>.				{ stringAppend(&string, yytext); }
 <STR><<EOF>>      		{
-					PRINT_ERROR("unterminated string literal", stateLine, stateColumn);
+					PRINT_ERROR("unterminated string literal", statePos.line, statePos.column);
 					stringAppend(&string, "");
 					yyterminate();
 				}
 
-{SEMICOLON}		{ lastToken = SEMICOLON; printLastToken(); }
-{COMMA}			{ lastToken = COMMA; printLastToken(); }
-{BLANKID}		{ lastToken = BLANKID; printLastToken(); }
-{ASSIGN}		{ lastToken = ASSIGN; printLastToken(); }
-{STAR}			{ lastToken = STAR; printLastToken(); }
-{DIV}			{ lastToken = DIV; printLastToken(); }
-{MINUS}			{ lastToken = MINUS; printLastToken(); }
-{PLUS}			{ lastToken = PLUS; printLastToken(); }
-{EQ}			{ lastToken = EQ; printLastToken(); }
-{GE}			{ lastToken = GE; printLastToken(); }
-{GT}			{ lastToken = GT; printLastToken(); }
-{LBRACE}		{ lastToken = LBRACE; printLastToken(); }
-{LE}			{ lastToken = LE; printLastToken(); }
-{LPAR}			{ lastToken = LPAR; printLastToken(); }
-{LSQ}			{ lastToken = LSQ; printLastToken(); }
-{LT}			{ lastToken = LT; printLastToken(); }
-{MOD}			{ lastToken = MOD; printLastToken(); }
-{NE}			{ lastToken = NE; printLastToken(); }
-{NOT}			{ lastToken = NOT; printLastToken(); }
-{AND}			{ lastToken = AND; printLastToken(); }
-{OR}			{ lastToken = OR; printLastToken(); }
-{RBRACE}		{ lastToken = RBRACE; printLastToken(); }
-{RPAR}			{ lastToken = RPAR; printLastToken(); }
-{RSQ}			{ lastToken = RSQ; printLastToken(); }
-{PACKAGE}		{ lastToken = PACKAGE; printLastToken(); }
-{RETURN}		{ lastToken = RETURN; printLastToken(); }
-{ELSE}			{ lastToken = ELSE; printLastToken(); }
-{FOR}			{ lastToken = FOR; printLastToken(); }
-{IF}			{ lastToken = IF; printLastToken(); }
-{VAR}			{ lastToken = VAR; printLastToken(); }
-{INT}			{ lastToken = INT; printLastToken(); }
-{FLOAT32}		{ lastToken = FLOAT32; printLastToken(); }
-{BOOL}			{ lastToken = BOOL; printLastToken(); }
-{STRING}		{ lastToken = STRING; printLastToken(); }
-{PRINT}			{ lastToken = PRINT; printLastToken(); }
-{PARSEINT}		{ lastToken = PARSEINT; printLastToken(); }
-{FUNC}			{ lastToken = FUNC; printLastToken(); }
-{CMDARGS}		{ lastToken = CMDARGS; printLastToken(); }
+{SEMICOLON}		{ lastToken = L_SEMICOLON; printLastToken(); }
+{COMMA}			{ lastToken = L_COMMA; printLastToken(); }
+{BLANKID}		{ lastToken = L_BLANKID; printLastToken(); }
+{ASSIGN}		{ lastToken = L_ASSIGN; printLastToken(); }
+{STAR}			{ lastToken = L_STAR; printLastToken(); }
+{DIV}			{ lastToken = L_DIV; printLastToken(); }
+{MINUS}			{ lastToken = L_MINUS; printLastToken(); }
+{PLUS}			{ lastToken = L_PLUS; printLastToken(); }
+{EQ}			{ lastToken = L_EQ; printLastToken(); }
+{GE}			{ lastToken = L_GE; printLastToken(); }
+{GT}			{ lastToken = L_GT; printLastToken(); }
+{LBRACE}		{ lastToken = L_LBRACE; printLastToken(); }
+{LE}			{ lastToken = L_LE; printLastToken(); }
+{LPAR}			{ lastToken = L_LPAR; printLastToken(); }
+{LSQ}			{ lastToken = L_LSQ; printLastToken(); }
+{LT}			{ lastToken = L_LT; printLastToken(); }
+{MOD}			{ lastToken = L_MOD; printLastToken(); }
+{NE}			{ lastToken = L_NE; printLastToken(); }
+{NOT}			{ lastToken = L_NOT; printLastToken(); }
+{AND}			{ lastToken = L_AND; printLastToken(); }
+{OR}			{ lastToken = L_OR; printLastToken(); }
+{RBRACE}		{ lastToken = L_RBRACE; printLastToken(); }
+{RPAR}			{ lastToken = L_RPAR; printLastToken(); }
+{RSQ}			{ lastToken = L_RSQ; printLastToken(); }
+{PACKAGE}		{ lastToken = L_PACKAGE; printLastToken(); }
+{RETURN}		{ lastToken = L_RETURN; printLastToken(); }
+{ELSE}			{ lastToken = L_ELSE; printLastToken(); }
+{FOR}			{ lastToken = L_FOR; printLastToken(); }
+{IF}			{ lastToken = L_IF; printLastToken(); }
+{VAR}			{ lastToken = L_VAR; printLastToken(); }
+{INT}			{ lastToken = L_INT; printLastToken(); }
+{FLOAT32}		{ lastToken = L_FLOAT32; printLastToken(); }
+{BOOL}			{ lastToken = L_BOOL; printLastToken(); }
+{STRING}		{ lastToken = L_STRING; printLastToken(); }
+{PRINT}			{ lastToken = L_PRINT; printLastToken(); }
+{PARSEINT}		{ lastToken = L_PARSEINT; printLastToken(); }
+{FUNC}			{ lastToken = L_FUNC; printLastToken(); }
+{CMDARGS}		{ lastToken = L_CMDARGS; printLastToken(); }
 
-{RESERVED}		{ lastToken = RESERVED; printLastToken(); }
-{NATURAL}		{ lastToken = NATURAL; printLastToken(); }
-{DECIMAL}		{ lastToken = DECIMAL; printLastToken(); }
-{IDENTIFIER}		{ lastToken = IDENTIFIER; printLastToken(); }
+{RESERVED}		{ lastToken = L_RESERVED; printLastToken(); }
+{NATURAL}		{ lastToken = L_NATURAL; printLastToken(); }
+{DECIMAL}		{ lastToken = L_DECIMAL; printLastToken(); }
+{IDENTIFIER}		{ lastToken = L_IDENTIFIER; printLastToken(); }
 
 {lineterminator}	{
 				nextLine();
 
 				checkLastToken();
-				lastToken = OTHER;
+				lastToken = L_OTHER;
 			}
 ({whitespace}+|"//".*)	{;}
-{INVALID_OCTAL}		{ PRINT_ERROR("invalid octal constant (%s)", line, column - yyleng, yytext); }
-.			{ PRINT_ERROR("illegal character (%s)", line, column - yyleng, yytext); }
+{INVALID_OCTAL}		{ PRINT_ERROR("invalid octal constant (%s)", lexerPos.line, lexerPos.column - yyleng, yytext); }
+.			{ PRINT_ERROR("illegal character (%s)", lexerPos.line, lexerPos.column - yyleng, yytext); }
 <<EOF>>			{
 				checkLastToken();
-				lastToken = OTHER;
+				lastToken = L_OTHER;
 				yyterminate();
 			}
 
@@ -297,12 +240,15 @@ int yywrap() {  /* called on EOF, return 1 to terminate */
 }
 
 void tokenPreHook() { /* called before every catched token */
-	column += yyleng;
+	syntaxPos.line = lexerPos.line;
+	syntaxPos.column = lexerPos.column;
+
+	lexerPos.column += yyleng;
 }
 
 void nextLine(void) {
-	++line;
-	column = 1;
+	lexerPos.line++;
+	lexerPos.column = 1;
 }
 
 void printLex(const char *token, const char *_string) {
@@ -324,13 +270,13 @@ void printLexF(const char *format, const char *string) {
 	printf("\n");
 }
 
-void printToken(const Token token) {
+void printToken(const LexerToken token) {
 	if (!(debugMode & Lexer)) {
 		return;
 	}
 
 	// HACK: Fix
-	if (token == STRLIT) {
+	if (token == L_STRLIT) {
 		printf("STRLIT(\"%s\")\n", string.buffer);
 		return;
 	}
@@ -369,15 +315,15 @@ void printLastToken(void) {
 
 inline void checkLastToken(void) {
 	switch (lastToken) {
-		case NATURAL:
-		case DECIMAL:
-		case STRLIT:
-		case IDENTIFIER:
-		case RETURN:
-		case RPAR:
-		case RSQ:
-		case RBRACE:
-			printToken(SEMICOLON);
+		case L_NATURAL:
+		case L_DECIMAL:
+		case L_STRLIT:
+		case L_IDENTIFIER:
+		case L_RETURN:
+		case L_RPAR:
+		case L_RSQ:
+		case L_RBRACE:
+			printToken(L_SEMICOLON);
 			break;
 		default:
 			break;
@@ -422,4 +368,17 @@ void stringDestroy(String *string) {
 	  free(string->buffer);
   }
   *string = (String){0};
+}
+
+void yyerror(const char *error) {
+	(void) error;
+}
+
+void usage(const char *programName) {
+	if (programName == NULL) {
+		exit(EXIT_FAILURE);
+	}
+
+	fprintf(stderr, "Usage: %s\n", programName);
+	exit(EXIT_FAILURE);
 }
