@@ -126,6 +126,9 @@ int main(int argc, char **argv) {
 	}
 
 	yyparse();
-	printNode(program, 0);
+
+	if (debugMode & Parser) {
+		printNode(program, 0);
+	}
 	return 0;
 }
