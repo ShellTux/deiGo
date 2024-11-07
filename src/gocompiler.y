@@ -107,12 +107,119 @@
 
 %%
 
-Program: PACKAGE IDENTIFIER SEMICOLON {
+Program: PACKAGE IDENTIFIER SEMICOLON Declarations {
        $$ = program = createNode(Program, NULL);
    }
    ;
 
+Declarations: FuncDeclaration SEMICOLON {}
+	    | VarDeclaration SEMICOLON {}
+	;
+
+VarDeclaration: VAR VarSpec {}
+	      | VAR LPAR VarSpec SEMICOLON RPAR {}
+	;
+
+VarSpec: IDENTIFIER VarSpecs Type {}
+       ;
+
+VarSpecs: COMMA IDENTIFIER VarSpecs {}
+	| {}
+	;
+
+Type: INT {}
+    | FLOAT32 {}
+    | BOOL  {}
+    | STRING {}
+    ;
+
+FuncDeclaration: FUNC FuncHeader FuncBody {}
+	       ;
+
+FuncHeader: IDENTIFIER LPAR Parameters RPAR Type {}
+	  | IDENTIFIER LPAR Parameters RPAR {}
+	  ;
+
+FuncBody: LBRACE VarsAndStatements RBRACE {}
+	;
+
+Parameters: ParamDecl ParameterList {}
+	  | {}
+	  ;
+
+ParameterList: COMMA ParamDecl ParameterList {}
+         | /* epsilon */ {}
+         ;
+
+ParamDecl: IDENTIFIER Type {}
+         ;
+
+VarsAndStatements: /* epsilon */ {}
+                 |  SEMICOLON VarsAndStatements {}
+                 |  VarDeclaration SEMICOLON VarsAndStatements {}
+                 |  Statement SEMICOLON VarsAndStatements {}
+                 ;
+
+Statement: IDENTIFIER ASSIGN Expr {}
+         | LBRACE StatementList RBRACE {}
+         | IF Expr BlockProduction {}
+         | IF Expr BlockProduction ELSE BlockProduction {}
+         | FOR Expr BlockProduction {}
+         | FOR BlockProduction {}
+         | RETURN Expr {}
+         | RETURN {}
+         | FuncInvocation {}
+         | ParseArgs {}
+         | PRINT LPAR Expr RPAR {}
+         | PRINT LPAR STRLIT RPAR {}
+         | error {}
+         ;
+
+ParseArgs: IDENTIFIER COMMA BLANKID ASSIGN PARSEINT LPAR CMDARGS LSQ Expr RSQ RPAR {}
+	 ;
+
+FuncInvocation: IDENTIFIER LPAR RPAR {}
+              | IDENTIFIER LPAR error RPAR {}
+              | IDENTIFIER LPAR Expr ExprList RPAR {}
+              ;
+
+ExprList: COMMA Expr ExprList {}
+	| {}
+	;
+
+Expr: Expr OR Expr {}
+    | Expr AND Expr {}
+    | Expr LT Expr {}
+    | Expr GT Expr {}
+    | Expr EQ Expr {}
+    | Expr NE Expr {}
+    | Expr LE Expr {}
+    | Expr GE Expr {}
+    | Expr PLUS Expr {}
+    | Expr MINUS Expr {}
+    | Expr STAR Expr {}
+    | Expr DIV Expr {}
+    | Expr MOD Expr {}
+    | NOT Expr {}
+    | MINUS Expr %prec UNARY {}
+    | PLUS Expr %prec UNARY {}
+    | NATURAL {}
+    | DECIMAL {}
+    | IDENTIFIER {}
+    | FuncInvocation {}
+    | LPAR Expr RPAR {}
+    | LPAR error RPAR {}
+    ;
+
+BlockProduction: LBRACE StatementList RBRACE {}
+               ;
+
+StatementList: Statement SEMICOLON StatementList                    {}
+             | /* epsilon */                                        {}
+             ;
+
 %%
+
 int main(int argc, char **argv) {
 	for (int i = 1; i < argc; ++i) {
 		const char *arg = argv[i];
