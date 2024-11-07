@@ -232,6 +232,9 @@ int main(int argc, char **argv) {
 		debugMode |= Parser * ((strcmp("-t", arg) == 0) ? 1 : 0);
 	}
 
+#ifdef DEBUG
+	yydebug = 1;
+#endif
 	yyparse();
 
 	if (debugMode & Parser) {

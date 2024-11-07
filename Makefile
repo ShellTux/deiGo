@@ -10,7 +10,7 @@ YACC_OUTPUT = bin/parser.tab.c
 YACC_HEADER = bin/y.tab.h
 REPORT_FILE = bin/y.output
 
-CFLAGS  = -Wall -Wextra -Werror
+CFLAGS += -Wall -Wextra -Werror
 CFLAGS += -Wno-unused-function
 CFLAGS += -Wno-implicit-function-declaration
 CFLAGS += -I$(shell realpath include)
