@@ -132,13 +132,28 @@ typedef struct TreeNode {
   struct TreeNode *currentBranch;
 } TreeNode;
 
-typedef TreeNode Node;
-
 TreeNode *newNode(const Category category, char *token, TreeNode *newBranch);
 void linkChild(TreeNode *parent, TreeNode *newBranch);
-void linkInLevel(TreeNode *node, TreeNode *nodlevel);
-void shiftInsertNode(TreeNode *parent, TreeNode *newnod);
+void linkInLevel(TreeNode *node, TreeNode *nodeLevel);
+void shiftInsertNode(TreeNode *parent, TreeNode *nodeNew);
 void showNode(TreeNode *node, int depth);
+
+typedef struct {
+  Category category;
+  char *token;
+  struct node_list *children;
+} Node;
+
+Node *addChild(Node *parent, const Node *child);
+Node *createNode(const Category category, const char *token);
+void printNode(const Node *node, const int depth);
+
+typedef struct node_list {
+  Node *node;
+  struct node_list *next;
+} NodeList;
+
+void printNodeList(const NodeList *nodeList, const int depth);
 
 // }}}
 
