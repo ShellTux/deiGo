@@ -377,7 +377,7 @@ void stringDestroy(String *string) {
 
 void yyerror(const char *error) {
 	errors++;
-	printf(ERROR_FORMAT("syntax error: %s"), syntaxPos.line, syntaxPos.column, error);
+	printf(ERROR_FORMAT("%s: %s"), syntaxPos.line, syntaxPos.column, error, yytext);
 }
 
 void usage(const char *programName) {
