@@ -144,6 +144,10 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 						printLastToken();
 					}
 					BEGIN(INITIAL);
+
+					if (isValidString && !(debugMode & Lexer)) {
+						return STRLIT;
+					}
 				}
 <STR>\n      			{
 					PRINT_ERROR("unterminated string literal", statePos.line, statePos.column);
