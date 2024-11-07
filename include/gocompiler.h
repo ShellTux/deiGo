@@ -7,25 +7,25 @@ void tokenPreHook(void);
 void yyerror(const char *error);
 void nextLine(void);
 
-typedef struct {
+struct Pos {
   int line;
   int column;
-} Pos;
+};
 
-typedef struct {
+struct String {
   char *buffer;
   size_t length;
   size_t capacity;
-} String;
+};
 
-void stringAppend(String *dest, const char *src);
-void stringDestroy(String *string);
+void stringAppend(struct String *dest, const char *src);
+void stringDestroy(struct String *string);
 
-typedef enum {
+enum DebugMode {
   None = 0,
   Lexer = 1 << 0,
   Parser = 1 << 1,
-} DebugMode;
+};
 
 // Meta 1 {{{
 
@@ -117,43 +117,43 @@ typedef void (*PrintLexFunction)(const char *, const char *);
   CATEGORY(Mul)                                                                \
   CATEGORY(Div)
 
-typedef enum category {
+enum Category {
 #define CATEGORY(ENUM) ENUM,
   CATEGORIES
 #undef CATEGORY
-} Category;
+};
 
-void printCategory(const Category category);
+void printCategory(const enum Category category);
 
 typedef struct TreeNode {
-  Category category;
+  enum Category category;
   char *token;
   struct TreeNode *newBranch;
   struct TreeNode *currentBranch;
 } TreeNode;
 
-TreeNode *newNode(const Category category, char *token, TreeNode *newBranch);
+TreeNode *newNode(const enum Category category, char *token, TreeNode *newBranch);
 void linkChild(TreeNode *parent, TreeNode *newBranch);
 void linkInLevel(TreeNode *node, TreeNode *nodeLevel);
 void shiftInsertNode(TreeNode *parent, TreeNode *nodeNew);
 void showNode(TreeNode *node, int depth);
 
-typedef struct {
-  Category category;
+struct Node {
+  enum Category category;
   char *token;
-  struct node_list *children;
-} Node;
+  struct NodeList *children;
+};
 
-Node *addChild(Node *parent, const Node *child);
-Node *createNode(const Category category, const char *token);
-void printNode(const Node *node, const int depth);
+struct Node *addChild(struct Node *parent, const struct Node *child);
+struct Node *createNode(const enum Category category, const char *token);
+void printNode(const struct Node *node, const int depth);
 
-typedef struct node_list {
-  Node *node;
-  struct node_list *next;
-} NodeList;
+struct NodeList {
+  struct Node *node;
+  struct NodeList *next;
+};
 
-void printNodeList(const NodeList *nodeList, const int depth);
+void printNodeList(const struct NodeList *nodeList, const int depth);
 
 // }}}
 

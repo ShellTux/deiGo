@@ -38,22 +38,22 @@
     #define PASS_TOKEN() { yylval.string = strdup(yytext); }
 
     bool isValidString = false;
-    String string = {0};
+    struct String string = {0};
     LexerToken lastToken = L_OTHER;
     int errors = 0;
-    extern DebugMode debugMode;
+    extern enum DebugMode debugMode;
 
-    Pos lexerPos = {
+    struct Pos lexerPos = {
     	.line = 1,
 	.column = 1,
     };
 
-    Pos statePos = {
+    struct Pos statePos = {
     	.line = -1,
 	.column = -1,
     };
 
-    Pos syntaxPos;
+    struct Pos syntaxPos;
 %}
 
 digit			[0-9]
@@ -115,7 +115,7 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 "/*"					{
 						BEGIN(COMMENT);
 
-						statePos = (Pos){
+						statePos = (struct Pos){
 							.line = lexerPos.line,
 							.column = lexerPos.column - yyleng,
 						};
@@ -131,7 +131,7 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 					BEGIN(STR);
 					isValidString = true;
 					stringDestroy(&string);
-					statePos = (Pos){
+					statePos = (struct Pos){
 						.line = lexerPos.line,
 						.column = lexerPos.column - yyleng,
 					};
@@ -336,7 +336,7 @@ inline void checkLastToken(void) {
 	}
 }
 
-void stringAppend(String *dest, const char *src) {
+void stringAppend(struct String *dest, const char *src) {
 	if (dest == NULL || src == NULL) {
 		return;
 	}
@@ -365,7 +365,7 @@ void stringAppend(String *dest, const char *src) {
 	dest->length += srcLength;
 }
 
-void stringDestroy(String *string) {
+void stringDestroy(struct String *string) {
   if (string == NULL) {
     return;
   }
@@ -373,7 +373,7 @@ void stringDestroy(String *string) {
   if (string->buffer != NULL) {
 	  free(string->buffer);
   }
-  *string = (String){0};
+  *string = (struct String){0};
 }
 
 void yyerror(const char *error) {

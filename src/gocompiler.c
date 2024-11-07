@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void printCategory(const Category category) {
+void printCategory(const enum Category category) {
   char *categoryS = NULL;
   switch (category) {
 #define CATEGORY(ENUM)                                                         \
@@ -18,7 +18,7 @@ void printCategory(const Category category) {
   printf("%s", categoryS);
 }
 
-TreeNode *newNode(const Category category, char *token, TreeNode *newBranch) {
+TreeNode *newNode(const enum Category category, char *token, TreeNode *newBranch) {
   TreeNode *new = malloc(sizeof(TreeNode));
   if (token == NULL) {
     return NULL;
@@ -106,15 +106,15 @@ void showNode(TreeNode *node, int depth) {
   showNode(node->currentBranch, depth);
 }
 
-Node *createNode(const Category category, const char *token) {
-  Node *node = malloc(sizeof(Node));
-  *node = (Node){.category = category,
+struct Node *createNode(const enum Category category, const char *token) {
+  struct Node *node = malloc(sizeof(struct Node));
+  *node = (struct Node){.category = category,
                  .token = (char *)(token == NULL ? token : strdup(token)),
                  .children = NULL};
   return node;
 }
 
-void printNode(const Node *node, const int depth) {
+void printNode(const struct Node *node, const int depth) {
   if (node == NULL) {
     return;
   }
@@ -129,27 +129,27 @@ void printNode(const Node *node, const int depth) {
 #if 0
   printNodeList(node->children, depth);
 #else
-  for (NodeList *children = node->children;
+  for (struct NodeList *children = node->children;
        children != NULL && children->node != NULL; children = children->next) {
     printNode(children->node, depth + 1);
   }
 #endif
 }
 
-Node *addChild(Node *parent, const Node *childNode) {
-  NodeList *childrenNodeList = malloc(sizeof(NodeList));
+struct Node *addChild(struct Node *parent, const struct Node *childNode) {
+  struct NodeList *childrenNodeList = malloc(sizeof(struct NodeList));
   assert(childrenNodeList != NULL && "childrenNodeList == NULL");
 
-  *childrenNodeList = (NodeList){
+  *childrenNodeList = (struct NodeList){
       .next = NULL,
-      .node = (Node *)childNode,
+      .node = (struct Node *)childNode,
   };
 
-  NodeList *child = NULL;
+  struct NodeList *child = NULL;
 
   if (parent->children == NULL) {
     parent->children = childrenNodeList;
-    return (Node *)childNode;
+    return (struct Node *)childNode;
   }
 
   for (child = parent->children; child != NULL && child->next != NULL;
@@ -157,10 +157,10 @@ Node *addChild(Node *parent, const Node *childNode) {
   }
   child->next = childrenNodeList;
 
-  return (Node *)childNode;
+  return (struct Node *)childNode;
 }
 
-void printNodeList(const NodeList *nodeList, const int depth) {
+void printNodeList(const struct NodeList *nodeList, const int depth) {
   if (nodeList == NULL) {
     return;
   }

@@ -4,9 +4,9 @@
 
 	#include "gocompiler.h"
 
-	DebugMode debugMode = None;
+	enum DebugMode debugMode = None;
 	TreeNode *programT;
-	Node *program = NULL;
+	struct Node *program = NULL;
 %}
 
 // %union {
@@ -14,7 +14,7 @@
 //     char* id;
 // }
 %union {
-	Node *node;
+	struct Node *node;
 	char *string;
 	double decimal;
 	int natural;
