@@ -40,6 +40,7 @@
     bool isValidString = false;
     String string = {0};
     LexerToken lastToken = L_OTHER;
+    int errors = 0;
     extern DebugMode debugMode;
 
     Pos lexerPos = {
@@ -175,49 +176,49 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 					yyterminate();
 				}
 
-{SEMICOLON}		{ lastToken = L_SEMICOLON;   printLastToken(); return SEMICOLON; }
-{COMMA}			{ lastToken = L_COMMA;       printLastToken(); return COMMA;     }
-{BLANKID}		{ lastToken = L_BLANKID;     printLastToken(); return BLANKID;   }
-{ASSIGN}		{ lastToken = L_ASSIGN;      printLastToken(); return ASSIGN;    }
-{STAR}			{ lastToken = L_STAR;        printLastToken(); return STAR;      }
-{DIV}			{ lastToken = L_DIV;         printLastToken(); return DIV;       }
-{MINUS}			{ lastToken = L_MINUS;       printLastToken(); return MINUS;     }
-{PLUS}			{ lastToken = L_PLUS;        printLastToken(); return PLUS;      }
-{EQ}			{ lastToken = L_EQ;          printLastToken(); return EQ;        }
-{GE}			{ lastToken = L_GE;          printLastToken(); return GE;        }
-{GT}			{ lastToken = L_GT;          printLastToken(); return GT;        }
-{LBRACE}		{ lastToken = L_LBRACE;      printLastToken(); return LBRACE;    }
-{LE}			{ lastToken = L_LE;          printLastToken(); return LE;        }
-{LPAR}			{ lastToken = L_LPAR;        printLastToken(); return LPAR;      }
-{LSQ}			{ lastToken = L_LSQ;         printLastToken(); return LSQ;       }
-{LT}			{ lastToken = L_LT;          printLastToken(); return LT;        }
-{MOD}			{ lastToken = L_MOD;         printLastToken(); return MOD;       }
-{NE}			{ lastToken = L_NE;          printLastToken(); return NE;        }
-{NOT}			{ lastToken = L_NOT;         printLastToken(); return NOT;       }
-{AND}			{ lastToken = L_AND;         printLastToken(); return AND;       }
-{OR}			{ lastToken = L_OR;          printLastToken(); return OR;        }
-{RBRACE}		{ lastToken = L_RBRACE;      printLastToken(); return RBRACE;    }
-{RPAR}			{ lastToken = L_RPAR;        printLastToken(); return RPAR;      }
-{RSQ}			{ lastToken = L_RSQ;         printLastToken(); return RSQ;       }
-{PACKAGE}		{ lastToken = L_PACKAGE;     printLastToken(); return PACKAGE;   }
-{RETURN}		{ lastToken = L_RETURN;      printLastToken(); return RETURN;    }
-{ELSE}			{ lastToken = L_ELSE;        printLastToken(); return ELSE;      }
-{FOR}			{ lastToken = L_FOR;         printLastToken(); return FOR;       }
-{IF}			{ lastToken = L_IF;          printLastToken(); return IF;        }
-{VAR}			{ lastToken = L_VAR;         printLastToken(); return VAR;       }
-{INT}			{ lastToken = L_INT;         printLastToken(); return INT;       }
-{FLOAT32}		{ lastToken = L_FLOAT32;     printLastToken(); return FLOAT32;   }
-{BOOL}			{ lastToken = L_BOOL;        printLastToken(); return BOOL;      }
-{STRING}		{ lastToken = L_STRING;      printLastToken(); return STRING;    }
-{PRINT}			{ lastToken = L_PRINT;       printLastToken(); return PRINT;     }
-{PARSEINT}		{ lastToken = L_PARSEINT;    printLastToken(); return PARSEINT;  }
-{FUNC}			{ lastToken = L_FUNC;        printLastToken(); return FUNC;      }
-{CMDARGS}		{ lastToken = L_CMDARGS;     printLastToken(); return CMDARGS;   }
+{SEMICOLON}		{ lastToken = L_SEMICOLON;   printLastToken(); if (!(debugMode & Lexer)) return SEMICOLON; }
+{COMMA}			{ lastToken = L_COMMA;       printLastToken(); if (!(debugMode & Lexer)) return COMMA;     }
+{BLANKID}		{ lastToken = L_BLANKID;     printLastToken(); if (!(debugMode & Lexer)) return BLANKID;   }
+{ASSIGN}		{ lastToken = L_ASSIGN;      printLastToken(); if (!(debugMode & Lexer)) return ASSIGN;    }
+{STAR}			{ lastToken = L_STAR;        printLastToken(); if (!(debugMode & Lexer)) return STAR;      }
+{DIV}			{ lastToken = L_DIV;         printLastToken(); if (!(debugMode & Lexer)) return DIV;       }
+{MINUS}			{ lastToken = L_MINUS;       printLastToken(); if (!(debugMode & Lexer)) return MINUS;     }
+{PLUS}			{ lastToken = L_PLUS;        printLastToken(); if (!(debugMode & Lexer)) return PLUS;      }
+{EQ}			{ lastToken = L_EQ;          printLastToken(); if (!(debugMode & Lexer)) return EQ;        }
+{GE}			{ lastToken = L_GE;          printLastToken(); if (!(debugMode & Lexer)) return GE;        }
+{GT}			{ lastToken = L_GT;          printLastToken(); if (!(debugMode & Lexer)) return GT;        }
+{LBRACE}		{ lastToken = L_LBRACE;      printLastToken(); if (!(debugMode & Lexer)) return LBRACE;    }
+{LE}			{ lastToken = L_LE;          printLastToken(); if (!(debugMode & Lexer)) return LE;        }
+{LPAR}			{ lastToken = L_LPAR;        printLastToken(); if (!(debugMode & Lexer)) return LPAR;      }
+{LSQ}			{ lastToken = L_LSQ;         printLastToken(); if (!(debugMode & Lexer)) return LSQ;       }
+{LT}			{ lastToken = L_LT;          printLastToken(); if (!(debugMode & Lexer)) return LT;        }
+{MOD}			{ lastToken = L_MOD;         printLastToken(); if (!(debugMode & Lexer)) return MOD;       }
+{NE}			{ lastToken = L_NE;          printLastToken(); if (!(debugMode & Lexer)) return NE;        }
+{NOT}			{ lastToken = L_NOT;         printLastToken(); if (!(debugMode & Lexer)) return NOT;       }
+{AND}			{ lastToken = L_AND;         printLastToken(); if (!(debugMode & Lexer)) return AND;       }
+{OR}			{ lastToken = L_OR;          printLastToken(); if (!(debugMode & Lexer)) return OR;        }
+{RBRACE}		{ lastToken = L_RBRACE;      printLastToken(); if (!(debugMode & Lexer)) return RBRACE;    }
+{RPAR}			{ lastToken = L_RPAR;        printLastToken(); if (!(debugMode & Lexer)) return RPAR;      }
+{RSQ}			{ lastToken = L_RSQ;         printLastToken(); if (!(debugMode & Lexer)) return RSQ;       }
+{PACKAGE}		{ lastToken = L_PACKAGE;     printLastToken(); if (!(debugMode & Lexer)) return PACKAGE;   }
+{RETURN}		{ lastToken = L_RETURN;      printLastToken(); if (!(debugMode & Lexer)) return RETURN;    }
+{ELSE}			{ lastToken = L_ELSE;        printLastToken(); if (!(debugMode & Lexer)) return ELSE;      }
+{FOR}			{ lastToken = L_FOR;         printLastToken(); if (!(debugMode & Lexer)) return FOR;       }
+{IF}			{ lastToken = L_IF;          printLastToken(); if (!(debugMode & Lexer)) return IF;        }
+{VAR}			{ lastToken = L_VAR;         printLastToken(); if (!(debugMode & Lexer)) return VAR;       }
+{INT}			{ lastToken = L_INT;         printLastToken(); if (!(debugMode & Lexer)) return INT;       }
+{FLOAT32}		{ lastToken = L_FLOAT32;     printLastToken(); if (!(debugMode & Lexer)) return FLOAT32;   }
+{BOOL}			{ lastToken = L_BOOL;        printLastToken(); if (!(debugMode & Lexer)) return BOOL;      }
+{STRING}		{ lastToken = L_STRING;      printLastToken(); if (!(debugMode & Lexer)) return STRING;    }
+{PRINT}			{ lastToken = L_PRINT;       printLastToken(); if (!(debugMode & Lexer)) return PRINT;     }
+{PARSEINT}		{ lastToken = L_PARSEINT;    printLastToken(); if (!(debugMode & Lexer)) return PARSEINT;  }
+{FUNC}			{ lastToken = L_FUNC;        printLastToken(); if (!(debugMode & Lexer)) return FUNC;      }
+{CMDARGS}		{ lastToken = L_CMDARGS;     printLastToken(); if (!(debugMode & Lexer)) return CMDARGS;   }
 
-{RESERVED}		{ lastToken = L_RESERVED;    printLastToken(); return RESERVED;  }
-{NATURAL}		{ lastToken = L_NATURAL;     printLastToken(); return NATURAL;   }
-{DECIMAL}		{ lastToken = L_DECIMAL;     printLastToken(); return DECIMAL;   }
-{IDENTIFIER}		{ lastToken = L_IDENTIFIER;  printLastToken(); return IDENTIFIER;}
+{RESERVED}		{ lastToken = L_RESERVED;    printLastToken(); if (!(debugMode & Lexer)) return RESERVED;  }
+{NATURAL}		{ lastToken = L_NATURAL;     printLastToken(); if (!(debugMode & Lexer)) return NATURAL;   }
+{DECIMAL}		{ lastToken = L_DECIMAL;     printLastToken(); if (!(debugMode & Lexer)) return DECIMAL;   }
+{IDENTIFIER}		{ lastToken = L_IDENTIFIER;  printLastToken(); if (!(debugMode & Lexer)) return IDENTIFIER;}
 
 {lineterminator}	{
 				nextLine();
@@ -371,7 +372,8 @@ void stringDestroy(String *string) {
 }
 
 void yyerror(const char *error) {
-	(void) error;
+	errors++;
+	printf(ERROR_FORMAT("syntax error: %s"), syntaxPos.line, syntaxPos.column, error);
 }
 
 void usage(const char *programName) {
