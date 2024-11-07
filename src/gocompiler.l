@@ -35,7 +35,7 @@
     #define ERROR_FORMAT(MESSAGE) "Line %d, column %d: " MESSAGE "\n"
     #define PRINT_ERROR(FORMAT, ...) printf(ERROR_FORMAT(FORMAT), __VA_ARGS__)
     #define YY_USER_ACTION tokenPreHook();
-    #define PASS_TOKEN() { yylval.lexeme = strdup(yytext); }
+    #define PASS_TOKEN() { yylval.string = strdup(yytext); }
 
     bool isValidString = false;
     String string = {0};
@@ -146,6 +146,7 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 					BEGIN(INITIAL);
 
 					if (isValidString && !(debugMode & Lexer)) {
+						PASS_TOKEN();
 						return STRLIT;
 					}
 				}
@@ -220,9 +221,9 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 {CMDARGS}		{ lastToken = L_CMDARGS;     printLastToken(); if (!(debugMode & Lexer)) return CMDARGS;   }
 
 {RESERVED}		{ lastToken = L_RESERVED;    printLastToken(); if (!(debugMode & Lexer)) return RESERVED;  }
-{NATURAL}		{ lastToken = L_NATURAL;     printLastToken(); if (!(debugMode & Lexer)) return NATURAL;   }
-{DECIMAL}		{ lastToken = L_DECIMAL;     printLastToken(); if (!(debugMode & Lexer)) return DECIMAL;   }
-{IDENTIFIER}		{ lastToken = L_IDENTIFIER;  printLastToken(); if (!(debugMode & Lexer)) return IDENTIFIER;}
+{NATURAL}		{ lastToken = L_NATURAL;     printLastToken(); if (!(debugMode & Lexer)) { PASS_TOKEN(); return NATURAL; } }
+{DECIMAL}		{ lastToken = L_DECIMAL;     printLastToken(); if (!(debugMode & Lexer)) { PASS_TOKEN(); return DECIMAL; } }
+{IDENTIFIER}		{ lastToken = L_IDENTIFIER;  printLastToken(); if (!(debugMode & Lexer)) { PASS_TOKEN(); return IDENTIFIER; } }
 
 {lineterminator}	{
 				nextLine();

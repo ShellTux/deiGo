@@ -15,7 +15,9 @@
 // }
 %union {
 	Node *node;
-	char *token;
+	char *string;
+	double decimal;
+	int natural;
 }
 
 %locations
