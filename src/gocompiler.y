@@ -34,7 +34,6 @@
 %token FUNC
 %token GE
 %token GT
-%token IDENTIFIER
 %token IF
 %token INT
 %token INTEGER
@@ -61,9 +60,9 @@
 %token STRING
 %token VAR
 
-%token<string> ID
-%token<string> INTLIT
-%token<string> REALLIT
+%token<string> IDENTIFIER
+%token<string> NATURAL
+%token<string> DECIMAL
 %token<string> RESERVED
 %token<string> STRLIT
 
