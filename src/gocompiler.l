@@ -378,6 +378,11 @@ void stringDestroy(struct String *string) {
 
 void yyerror(const char *error) {
 	errors++;
+
+	if (!(debugMode & Parser) && strcmp("syntax error", error) == 0) {
+		return;
+	}
+
 	printf(ERROR_FORMAT("%s: %s"), syntaxPos.line, syntaxPos.column, error, yytext);
 }
 
