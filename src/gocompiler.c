@@ -205,6 +205,9 @@ void printNode(const struct Node *node, const int depth) {
   }
 
   printCategory(node->tokenType);
+  if (node->tokenValue != NULL) {
+    printf("(%s)", node->tokenValue);
+  }
   printf("\n");
 
 #if 0
