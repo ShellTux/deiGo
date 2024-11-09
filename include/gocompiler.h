@@ -99,23 +99,69 @@ typedef void (*PrintLexFunction)(const char *, const char *);
 
 // Meta 2 {{{
 
-#define CATEGORIES                                                             \
-  CATEGORY(Program)                                                            \
-  CATEGORY(Function)                                                           \
-  CATEGORY(Parameters)                                                         \
-  CATEGORY(Parameter)                                                          \
-  CATEGORY(Arguments)                                                          \
-  CATEGORY(Integer)                                                            \
-  CATEGORY(Double)                                                             \
-  CATEGORY(Identifier)                                                         \
-  CATEGORY(Natural)                                                            \
-  CATEGORY(Decimal)                                                            \
-  CATEGORY(Call)                                                               \
+#define TOKEN_ROOT CATEGORY(Program)
+
+/* Declaração de variáveis */
+#define TOKEN_VARDECL                                                          \
+  CATEGORY(VarDecl)                                                            \
+  CATEGORY(Declarations)
+
+/* Declaração/definição de funções */
+#define TOKEN_DECL_DEF_FUNC                                                    \
+  CATEGORY(FuncDecl)                                                           \
+  CATEGORY(FuncHeader)                                                         \
+  CATEGORY(FuncParams)                                                         \
+  CATEGORY(FuncBody)                                                           \
+  CATEGORY(ParamDecl)
+
+/* Statements */
+#define TOKEN_STATEMENTS                                                       \
+  CATEGORY(Block)                                                              \
   CATEGORY(If)                                                                 \
+  CATEGORY(For)                                                                \
+  CATEGORY(Return)                                                             \
+  CATEGORY(Call)                                                               \
+  CATEGORY(Print)                                                              \
+  CATEGORY(ParseArgs)
+
+/* Operadores */
+#define TOKEN_OPERATORS                                                        \
+  CATEGORY(Or)                                                                 \
+  CATEGORY(And)                                                                \
+  CATEGORY(Eq)                                                                 \
+  CATEGORY(Ne)                                                                 \
+  CATEGORY(Lt)                                                                 \
+  CATEGORY(Gt)                                                                 \
+  CATEGORY(Le)                                                                 \
+  CATEGORY(Ge)                                                                 \
   CATEGORY(Add)                                                                \
   CATEGORY(Sub)                                                                \
   CATEGORY(Mul)                                                                \
-  CATEGORY(Div)
+  CATEGORY(Div)                                                                \
+  CATEGORY(Mod)                                                                \
+  CATEGORY(Not)                                                                \
+  CATEGORY(Minus)                                                              \
+  CATEGORY(Plus)                                                               \
+  CATEGORY(Star)                                                               \
+  CATEGORY(Assign)
+
+#define TOKEN_TERMINAL                                                         \
+  CATEGORY(Int)                                                                \
+  CATEGORY(Float32)                                                            \
+  CATEGORY(Bool)                                                               \
+  CATEGORY(String)                                                             \
+  CATEGORY(Natural)                                                            \
+  CATEGORY(Decimal)                                                            \
+  CATEGORY(Identifier)                                                         \
+  CATEGORY(StrLit)
+
+#define CATEGORIES                                                             \
+  TOKEN_ROOT                                                                   \
+  TOKEN_VARDECL                                                                \
+  TOKEN_DECL_DEF_FUNC                                                          \
+  TOKEN_STATEMENTS                                                             \
+  TOKEN_OPERATORS                                                              \
+  TOKEN_TERMINAL
 
 enum Category {
 #define CATEGORY(ENUM) ENUM,
