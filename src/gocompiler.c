@@ -106,37 +106,21 @@ void showNode(TreeNode *node, int depth) {
   showNode(node->currentBranch, depth);
 }
 
-struct Node *createNode(const enum Category category, const char *token) {
-  struct Node *node = malloc(sizeof(struct Node));
-  *node = (struct Node){.category = category,
-                 .token = (char *)(token == NULL ? token : strdup(token)),
-                 .children = NULL};
+struct Node *createNode(const enum Category tokenType, const char *tokenValue) {
+  struct Node *node = malloc(sizeof(*node));
+  *node = (struct Node){
+      .tokenType = tokenType,
+      .tokenValue = (char *)tokenValue,
+      .children = NULL,
+  };
   return node;
 }
 
-void printNode(const struct Node *node, const int depth) {
-  if (node == NULL) {
-    return;
-  }
-
-  for (int i = 0; i < depth; ++i) {
-    printf("..");
-  }
-
-  printCategory(node->category);
-  printf("\n");
-
-#if 0
-  printNodeList(node->children, depth);
-#else
-  for (struct NodeList *children = node->children;
-       children != NULL && children->node != NULL; children = children->next) {
-    printNode(children->node, depth + 1);
-  }
-#endif
-}
-
 struct Node *addChild(struct Node *parent, const struct Node *childNode) {
+  if (parent == NULL || childNode == NULL) {
+    return NULL;
+  }
+
   struct NodeList *childrenNodeList = malloc(sizeof(struct NodeList));
   assert(childrenNodeList != NULL && "childrenNodeList == NULL");
 
@@ -158,6 +142,79 @@ struct Node *addChild(struct Node *parent, const struct Node *childNode) {
   child->next = childrenNodeList;
 
   return (struct Node *)childNode;
+}
+
+struct NodeList *addChilds(struct Node *parent, struct NodeList *childList) {
+  if (parent == NULL || childList == NULL) {
+    return childList;
+  }
+
+  for (struct NodeList *child = childList; child != NULL; child = child->next) {
+    addChild(parent, child->node);
+  }
+
+  return childList;
+}
+
+struct NodeList *addNodes(struct NodeList *list1, struct NodeList *list2) {
+  if (list1 == NULL || list2 == NULL) {
+    return list1;
+  }
+
+  struct NodeList *current = list1;
+  for (; current != NULL && current->next != NULL; current = current->next) {
+  }
+
+  current->next = list2;
+
+  return list1;
+}
+
+struct Node *addNode(struct NodeList **listP, struct Node *node) {
+  if (listP == NULL || node == NULL) {
+    return NULL;
+  }
+
+  struct NodeList *newNode = malloc(sizeof(*newNode));
+  *newNode = (struct NodeList){
+      .node = node,
+      .next = NULL,
+  };
+
+  if (*listP == NULL) {
+    *listP = newNode;
+
+    return node;
+  }
+
+  struct NodeList *list = *listP;
+  for (; list != NULL && list->next != NULL; list = list->next) {
+  }
+  list->next = newNode;
+
+  return node;
+}
+
+void printNode(const struct Node *node, const int depth) {
+  if (node == NULL) {
+    return;
+  }
+
+  for (int i = 0; i < depth; ++i) {
+    printf("..");
+  }
+
+  printCategory(node->tokenType);
+  printf("\n");
+
+#if 0
+  printNodeList(node->children, depth);
+#else
+  for (struct NodeList *children = node->children;
+       children != NULL && children->node != NULL; children = children->next) {
+    printNode(children->node, depth + 1);
+  }
+#endif
 }
 
 void printNodeList(const struct NodeList *nodeList, const int depth) {

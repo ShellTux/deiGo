@@ -113,25 +113,23 @@
 
 Program: PACKAGE IDENTIFIER SEMICOLON Declarations {
        $$ = program = createNode(Program, NULL);
-	addSibling($$, $4);
+	addChilds($$, $4);
    }
    ;
 
 Declarations : VarDeclaration SEMICOLON Declarations {
-		    $$ = createNodeList();
-		    addNode($$, $1);
+		    addNode(&$$, $1);
 		    addNodes($$, $3);
 		}
 	| VarDeclaration SEMICOLON {
-		    addNode($$, $1);
+		    addNode(&$$, $1);
 		}
 	| FuncDeclaration SEMICOLON Declarations {
-		    if ($$ == NULL) $$ = createNodeList();
-		    addNode($$, $1);
+		    addNode(&$$, $1);
 		    addNodes($$, $3);
 		}
 	| FuncDeclaration SEMICOLON {
-			addNode($$, $1);
+			addNode(&$$, $1);
 		}
 ;
 
@@ -255,6 +253,31 @@ int main(int argc, char **argv) {
 		debugMode |= Parser * ((strcmp("-t", arg) == 0) ? 1 : 0);
 	}
 
+#ifdef AST_DEMO
+	// Program
+	// ..FuncDecl
+	// ....FuncHeader                            |
+	// ......Identifier(main)    | Parameters    | Func
+	// ......FuncParams          |               |
+	// ....FuncBody                              |
+	program = createNode(Program, NULL);
+	struct Node *funcDecl = addChild(program, createNode(FuncDecl, NULL));
+
+	struct NodeList *func = NULL;
+	struct Node *funcHeader = addNode(&func, createNode(FuncHeader, NULL));
+	addNode(&func, createNode(FuncBody, NULL));
+
+	addChilds(funcDecl, func);
+
+	struct NodeList *params = NULL;
+	addNode(&params, createNode(Identifier, "main"));
+	addNode(&params, createNode(FuncParams, NULL));
+
+	addChilds(funcHeader, params);
+
+
+	printNode(program, 0);
+#else
 #ifdef DEBUG
 	yydebug = 1;
 #endif
@@ -263,5 +286,6 @@ int main(int argc, char **argv) {
 	if (debugMode & Parser) {
 		printNode(program, 0);
 	}
+#endif
 	return 0;
 }

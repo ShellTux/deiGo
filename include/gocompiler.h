@@ -178,33 +178,121 @@ typedef struct TreeNode {
   struct TreeNode *currentBranch;
 } TreeNode;
 
-TreeNode *newNode(const enum Category category, char *token, TreeNode *newBranch);
+TreeNode *newNode(const enum Category category, char *token,
+                  TreeNode *newBranch);
 void linkChild(TreeNode *parent, TreeNode *newBranch);
 void linkInLevel(TreeNode *node, TreeNode *nodeLevel);
 void shiftInsertNode(TreeNode *parent, TreeNode *nodeNew);
 void showNode(TreeNode *node, int depth);
 
+/**
+ * @struct Node
+ * Represents a node in a tree-like structure.
+ *
+ * @var tokenType
+ * The category/type of token associated with the node.
+ *
+ * @var tokenValue
+ * A string that holds the value of the token. Must be dynamically allocated
+ * (strdup).
+ *
+ * @var children
+ * A linked list of child nodes, which are also of type Node. (All children are
+ * in the same level)
+ */
 struct Node {
-  enum Category category;
-  char *token;
+  enum Category tokenType;
+  char *tokenValue;
   struct NodeList *children;
 };
 
-struct Node *addChild(struct Node *parent, const struct Node *child);
-struct Node *createNode(const enum Category category, const char *token);
-void printNode(const struct Node *node, const int depth);
-
+/**
+ * @struct NodeList
+ * Represents a linked list of Node pointers.
+ *
+ * @var node
+ * A pointer to the Node that this list entry points to.
+ *
+ * @var next
+ * A pointer to the next entry in the linked list.
+ */
 struct NodeList {
   struct Node *node;
   struct NodeList *next;
 };
 
-struct NodeList *createNodeList(void);
-struct Node *addSiblings(struct Node *parent, struct NodeList *siblings);
-struct NodeList *addNode(struct NodeList *nodeList, struct Node *node);
-struct NodeList *addNodes(struct NodeList *nodeList1,
-                          struct NodeList *nodeList2);
+/**
+ * @function addChild
+ * Adds a child node to the end of the linked-list of a parent node's children.
+ *
+ * @param parent A pointer to the parent node to which the child will be added.
+ * @param child A constant pointer to the child node to be added.
+ * @return A pointer to the added child node.
+ */
+struct Node *addChild(struct Node *parent, const struct Node *child);
 
+/**
+ * @function addChilds
+ * Adds multiple child nodes from a linked list to the end of the linked-list of
+ * a parent node's children.
+ *
+ * @param parent A pointer to the parent node.
+ * @param childList A pointer to the linked list of child nodes to be added.
+ * @return A pointer to childList.
+ */
+struct NodeList *addChilds(struct Node *parent, struct NodeList *childList);
+
+/**
+ * @function createNode
+ * Creates a new node with a specified token type and value. This function
+ * necessarily allocates a space in heap for the new node.
+ *
+ * @param tokenType The type of the token for the new node.
+ * @param tokenValue The value of the token for the new node.
+ * @return A pointer to the newly dynamically allocated created node.
+ */
+struct Node *createNode(const enum Category tokenType, const char *tokenValue);
+
+/**
+ * @function addNodes
+ * Appends all nodes from the second linked list to the first linked list.
+ *
+ * @param list1 A pointer to the first linked list.
+ * @param list2 A pointer to the second linked list to be appended.
+ * @return A pointer to the modified first linked list.
+ */
+struct NodeList *addNodes(struct NodeList *list1, struct NodeList *list2);
+
+/**
+ * @function addNode
+ * Adds a single node to the end of a linked list of nodes.
+ * if (nodeList == NULL || node == NULL) => nothing
+ *
+ * if (*nodeList == NULL) => create NodeList
+ *
+ * @param nodeList A pointer to a pointer to the linked list where the node will
+ * be added.
+ * @param node A pointer to the node to be added.
+ * @return A pointer to the modified linked list.
+ */
+struct Node *addNode(struct NodeList **nodeList, struct Node *node);
+
+/**
+ * @function printNode
+ * Prints the details of a node with indentation based on depth.
+ *
+ * @param node A pointer to the node to print.
+ * @param depth An integer representing the depth level for indentation.
+ */
+void printNode(const struct Node *node, const int depth);
+
+/**
+ * @function printNodeList
+ * Prints the details of a linked list of nodes with indentation based on depth.
+ *
+ * @param nodeList A pointer to the linked list of nodes to print.
+ * @param depth An integer representing the depth level for indentation.
+ */
 void printNodeList(const struct NodeList *nodeList, const int depth);
 
 // }}}
