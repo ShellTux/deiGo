@@ -9,10 +9,6 @@
 	struct Node *program = NULL;
 %}
 
-// %union {
-//     TreeNode *node;
-//     char* id;
-// }
 %union {
 	struct Node *node;
 	struct NodeList *list;
@@ -69,32 +65,26 @@
 %token<string> RESERVED
 %token<string> STRLIT
 
+%type<list> BlockProduction
 %type<list> Declarations
+%type<list> ExprList
+%type<list> FuncParamsList
+%type<list> StatementList
+%type<list> VarsAndStatements
+%type<list> VarSpecs
+%type<list> VarSpec
 
 %type<node> Expr
-%type<node> Expr2
-%type<node> Expr3
 %type<node> FuncBody
 %type<node> FuncDeclaration
+%type<node> FuncHeader
 %type<node> FuncInvocation
-%type<node> FuncInvocation2
-%type<node> Parameters
-%type<node> Parameters2
-%type<node> Parameters3
-%type<node> ParseArgs
+%type<node> FuncParams
+%type<node> ParamDecl
 %type<node> Program
 %type<node> Statement
-%type<node> Statement3
-%type<node> Statement4
-%type<node> StatementAux
-%type<node> StatementCicle
-%type<node> StatementIfFor
 %type<node> Type
-%type<node> Type2
 %type<node> VarDeclaration
-%type<node> VarsAndStatements
-%type<node> VarSpec
-%type<node> VarSpec2
 
 
 %left COMMA
@@ -112,132 +102,303 @@
 %%
 
 Program: PACKAGE IDENTIFIER SEMICOLON Declarations {
-       $$ = program = createNode(Program, NULL);
-	addChilds($$, $4);
-   }
+           $$ = createNode(Program, NULL);
+           addChilds($$, $4);
+       }
    ;
 
-Declarations : VarDeclaration SEMICOLON Declarations {
-		    addNode(&$$, $1);
-		    addNodes(&$$, $3);
-		}
-	| VarDeclaration SEMICOLON {
-		    addNode(&$$, $1);
-		}
-	| FuncDeclaration SEMICOLON Declarations {
-		    addNode(&$$, $1);
-		    addNodes(&$$, $3);
-		}
-	| FuncDeclaration SEMICOLON {
-			addNode(&$$, $1);
-		}
+Declarations: VarDeclaration SEMICOLON Declarations {
+                 addNode(&$$, $1);
+                 addNodes(&$$, $3);
+              }
+              | FuncDeclaration SEMICOLON Declarations {
+                 addNode(&$$, $1);
+                 addNodes(&$$, $3);
+              }
+              | VarDeclaration SEMICOLON {
+                 addNode(&$$, $1);
+              }
+              | FuncDeclaration SEMICOLON {
+                 addNode(&$$, $1);
+              }
+              | /* epsilon */ {}
 ;
 
 VarDeclaration: VAR VarSpec {
-			$$ = $2;
-		      }
-	      | VAR LPAR VarSpec SEMICOLON RPAR {
-			$$ = $3;
-		      }
-	;
+                     $$ = createNode(VarDecl, NULL);
+                     addChilds($$, $2);
+                 }
+              | VAR LPAR VarSpec SEMICOLON RPAR {
+                     $$ = createNode(VarDecl, NULL);
+                     addChilds($$, $3);
+                 }
+;
 
-VarSpec: IDENTIFIER VarSpecs Type {}
-       ;
+VarSpec: IDENTIFIER VarSpecs Type {
+           addNode(&$$, createNode(Identifier, $1));
+           // addNodes(&$$, $3);
+        }
+;
 
-VarSpecs: COMMA IDENTIFIER VarSpecs {}
-	| {}
-	;
-
-Type: INT     { $$ = createNode(Int, NULL); }
-    | FLOAT32 { $$ = createNode(Float32, NULL); }
-    | BOOL    { $$ = createNode(Bool, NULL); }
-    | STRING  { $$ = createNode(String, NULL); }
-    ;
-
-FuncDeclaration: FUNC FuncHeader FuncBody {}
-	       ;
-
-FuncHeader: IDENTIFIER LPAR Parameters RPAR Type {}
-	  | IDENTIFIER LPAR Parameters RPAR {}
-	  ;
-
-FuncBody: LBRACE VarsAndStatements RBRACE {}
-	;
-
-Parameters: ParamDecl ParameterList {}
-	  | {}
-	  ;
-
-ParameterList: COMMA ParamDecl ParameterList {}
+VarSpecs: COMMA IDENTIFIER VarSpecs {
+              addNode(&$$, createNode(Identifier, $2));
+              addNodes(&$$, $3);
+          }
          | /* epsilon */ {}
-         ;
+;
 
-ParamDecl: IDENTIFIER Type {}
-         ;
+Type: INT {
+          $$ = createNode(Int, NULL);
+      }
+    | FLOAT32 {
+          $$ = createNode(Float32, NULL);
+      }
+    | BOOL {
+          $$ = createNode(Bool, NULL);
+      }
+    | STRING {
+          $$ = createNode(String, NULL);
+      }
+;
+
+FuncDeclaration: FUNC FuncHeader FuncBody {
+                    $$ = createNode(FuncDecl, NULL);
+                    addChild($$, $2);
+                    addChild($$, $3);
+                }
+;
+
+FuncHeader: IDENTIFIER LPAR FuncParams RPAR Type {
+               $$ = createNode(FuncHeader, NULL);
+               addChild($$, createNode(Identifier, $1));
+               addChild($$, $3);
+               addChild($$, $5);
+           }
+          | IDENTIFIER LPAR FuncParams RPAR {
+               $$ = createNode(FuncHeader, NULL);
+               addChild($$, createNode(Identifier, $1));
+               addChild($$, $3);
+           }
+;
+
+FuncBody: LBRACE VarsAndStatements RBRACE {
+              $$ = createNode(FuncBody, NULL);
+              addChilds($$, $2);
+          }
+;
+
+FuncParams: ParamDecl FuncParamsList {
+		addChild($$, $1);
+                addChilds($$, $2);
+            }
+          | /* epsilon */ {}
+;
+
+FuncParamsList: COMMA ParamDecl FuncParamsList {
+                   addNode(&$$, $2);
+                   addNodes(&$$, $3);
+               }
+             | /* epsilon */ {
+               }
+;
+
+ParamDecl: IDENTIFIER Type {
+              $$ = createNode(ParamDecl, NULL);
+              addChild($$, createNode(Identifier, $1));
+              addChild($$, $2);
+          }
+;
 
 VarsAndStatements: /* epsilon */ {}
-                 |  SEMICOLON VarsAndStatements {}
-                 |  VarDeclaration SEMICOLON VarsAndStatements {}
-                 |  Statement SEMICOLON VarsAndStatements {}
-                 ;
+                 | VarDeclaration SEMICOLON VarsAndStatements {
+                     addNode(&$$, $1);
+                     addNodes(&$$, $3);
+                 }
+                 | Statement SEMICOLON VarsAndStatements {
+                     addNode(&$$, $1);
+                     addNodes(&$$, $3);
+                 }
+;
 
-Statement: IDENTIFIER ASSIGN Expr {}
-         | LBRACE StatementList RBRACE {}
-         | IF Expr BlockProduction {}
-         | IF Expr BlockProduction ELSE BlockProduction {}
-         | FOR Expr BlockProduction {}
-         | FOR BlockProduction {}
-         | RETURN Expr {}
-         | RETURN {}
-         | FuncInvocation {}
-         | ParseArgs {}
-         | PRINT LPAR Expr RPAR {}
-         | PRINT LPAR STRLIT RPAR {}
-         | error {}
-         ;
+Statement: IDENTIFIER ASSIGN Expr {
+                 $$ = createNode(Assign, NULL);
+                 addChild($$, createNode(Identifier, $1));
+                 addChild($$, $3);
+             }
+          | LBRACE StatementList RBRACE {
+                 $$ = createNode(Block, NULL);
+                 addChilds($$, $2);
+             }
+          | IF Expr BlockProduction {
+                 $$ = createNode(If, NULL);
+                 addChild($$, $2);
+                 addChilds($$, $3);
+             }
+          | IF Expr BlockProduction ELSE BlockProduction {
+                 $$ = createNode(If, NULL);
+                 addChild($$, $2);
+                 addChilds($$, $3);
+                 addChilds($$, $5);
+             }
+          | FOR Expr BlockProduction {
+                 $$ = createNode(For, NULL);
+                 addChild($$, $2);
+                 addChilds($$, $3);
+             }
+          | FOR BlockProduction {
+                 $$ = createNode(For, NULL);
+                 addChilds($$, $2);
+             }
+          | RETURN Expr {
+                 $$ = createNode(Return, NULL);
+                 addChild($$, $2);
+             }
+          | RETURN {
+                 $$ = createNode(Return, NULL);
+             }
+          | FuncInvocation {
+                 $$ = $1;
+             }
+          | PRINT LPAR Expr RPAR {
+                 $$ = createNode(Print, NULL);
+                 addChild($$, $3);
+             }
+          | PRINT LPAR STRLIT RPAR {
+                 $$ = createNode(StrLit, $3);
+             }
+          | error {
+                 // $$ = createNode(ErrorNode, NULL);
+             }
+;
 
-ParseArgs: IDENTIFIER COMMA BLANKID ASSIGN PARSEINT LPAR CMDARGS LSQ Expr RSQ RPAR {}
-	 ;
+FuncInvocation: IDENTIFIER LPAR RPAR {
+                   $$ = createNode(Call, NULL);
+                   addChild($$, createNode(Identifier, $1));
+               }
+              | IDENTIFIER LPAR error RPAR {
+                   // $$ = createNode(Call, NULL);
+                   // addChild($$, createNode(Identifier, $1));
+               }
+              | IDENTIFIER LPAR Expr ExprList RPAR {
+                   $$ = createNode(Call, NULL);
+                   addChild($$, createNode(Identifier, $1));
+                   addChild($$, $3);
+                   addChilds($$, $4);
+               }
+;
 
-FuncInvocation: IDENTIFIER LPAR RPAR {}
-              | IDENTIFIER LPAR error RPAR {}
-              | IDENTIFIER LPAR Expr ExprList RPAR {}
-              ;
+ExprList: COMMA Expr ExprList {
+              addNode(&$$, $2);
+              addNodes(&$$, $3);
+          }
+         | /* epsilon */ {}
+;
 
-ExprList: COMMA Expr ExprList {}
-	| {}
-	;
+Expr: Expr OR Expr {
+           $$ = createNode(Or, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr AND Expr {
+           $$ = createNode(And, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr LT Expr {
+           $$ = createNode(Lt, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr GT Expr {
+           $$ = createNode(Gt, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr EQ Expr {
+           $$ = createNode(Eq, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr NE Expr {
+           $$ = createNode(Ne, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr LE Expr {
+           $$ = createNode(Le, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr GE Expr {
+           $$ = createNode(Ge, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr PLUS Expr {
+           $$ = createNode(Plus, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr MINUS Expr {
+           $$ = createNode(Minus, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr STAR Expr {
+           $$ = createNode(Star, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr DIV Expr {
+           $$ = createNode(Div, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | Expr MOD Expr {
+           $$ = createNode(Mod, NULL);
+           addChild($$, $1);
+           addChild($$, $3);
+       }
+    | NOT Expr {
+           $$ = createNode(Not, NULL);
+           addChild($$, $2);
+       }
+    | MINUS Expr %prec UNARY {
+           $$ = createNode(Minus, NULL);
+           addChild($$, $2);
+       }
+    | PLUS Expr %prec UNARY {
+           $$ = createNode(Plus, NULL);
+           addChild($$, $2);
+       }
+    | NATURAL {
+           $$ = createNode(Natural, $1);
+       }
+    | IDENTIFIER {
+           $$ = createNode(Identifier, $1);
+       }
+    | FuncInvocation {
+           $$ = $1; // Inheriting FuncInvocation's structure
+       }
+    | LPAR Expr RPAR {
+           $$ = $2;
+       }
+    | LPAR error RPAR {
+           // $$ = createNode(ErrorNode, NULL);
+       }
+;
 
-Expr: Expr OR Expr           { $$ = createNode(Or, NULL);    addChild($$, $1); addChild($$, $3); }
-    | Expr AND Expr          { $$ = createNode(And, NULL);   addChild($$, $1); addChild($$, $3); }
-    | Expr LT Expr           { $$ = createNode(Lt, NULL);    addChild($$, $1); addChild($$, $3); }
-    | Expr GT Expr           { $$ = createNode(Gt, NULL);    addChild($$, $1); addChild($$, $3); }
-    | Expr EQ Expr           { $$ = createNode(Eq, NULL);    addChild($$, $1); addChild($$, $3); }
-    | Expr NE Expr           { $$ = createNode(Ne, NULL);    addChild($$, $1); addChild($$, $3); }
-    | Expr LE Expr           { $$ = createNode(Le, NULL);    addChild($$, $1); addChild($$, $3); }
-    | Expr GE Expr           { $$ = createNode(Ge, NULL);    addChild($$, $1); addChild($$, $3); }
-    | Expr PLUS Expr         { $$ = createNode(Plus, NULL);  addChild($$, $1); addChild($$, $3); }
-    | Expr MINUS Expr        { $$ = createNode(Minus, NULL); addChild($$, $1); addChild($$, $3); }
-    | Expr STAR Expr         { $$ = createNode(Star, NULL);  addChild($$, $1); addChild($$, $3); }
-    | Expr DIV Expr          { $$ = createNode(Div, NULL);   addChild($$, $1); addChild($$, $3); }
-    | Expr MOD Expr          { $$ = createNode(Mod, NULL);   addChild($$, $1); addChild($$, $3); }
-    | NOT Expr               { $$ = createNode(Not, NULL);   addChild($$, $2); }
-    | MINUS Expr %prec UNARY { $$ = createNode(Not, NULL);   addChild($$, $2); }
-    | PLUS Expr %prec UNARY  { $$ = createNode(Not, NULL);   addChild($$, $2); }
-    | NATURAL                { $$ = createNode(Natural, $1); }
-    | DECIMAL                { $$ = createNode(Natural, $1); }
-    | IDENTIFIER             { $$ = createNode(Natural, $1); }
-    | FuncInvocation         { $$ = $1; }
-    | LPAR Expr RPAR         { $$ = $2; }
-    | LPAR error RPAR        { }
-    ;
+BlockProduction: LBRACE StatementList RBRACE {
+                   addNodes(&$$, $2);
+               }
+;
 
-BlockProduction: LBRACE StatementList RBRACE {}
-               ;
-
-StatementList: Statement SEMICOLON StatementList                    {}
-             | /* epsilon */                                        {}
-             ;
+StatementList: Statement SEMICOLON StatementList {
+                  addNode(&$$, $1);
+                  addNodes(&$$, $3);
+              }
+              | /* epsilon */ {}
+;
 
 %%
 
