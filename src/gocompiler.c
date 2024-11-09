@@ -1,4 +1,5 @@
 #include "gocompiler.h"
+#include "stdbool.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -156,21 +157,18 @@ struct NodeList *addChilds(struct Node *parent, struct NodeList *childList) {
     addChild(parent, child->node);
   }
 
+  destroyList(childList, false);
+
   return childList;
 }
 
-struct NodeList *addNodes(struct NodeList *list1, struct NodeList *list2) {
-  if (list1 == NULL || list2 == NULL) {
-    return list1;
+struct NodeList *addNodes(struct NodeList **list1, struct NodeList *list2) {
+  for (struct NodeList *list = list2; list != NULL; list = list->next) {
+    addNode(list1, list->node);
   }
 
-  struct NodeList *current = list1;
-  for (; current != NULL && current->next != NULL; current = current->next) {
-  }
-
-  current->next = list2;
-
-  return list1;
+  destroyList(list2, false);
+  return *list1;
 }
 
 struct Node *addNode(struct NodeList **listP, struct Node *node) {
@@ -200,6 +198,19 @@ struct Node *addNode(struct NodeList **listP, struct Node *node) {
   }
 
   return node;
+}
+
+void destroyList(struct NodeList *list, const bool destroyNodes) {
+  for (struct NodeList *current = list; current != NULL;) {
+    struct NodeList *next = current->next;
+
+    if (destroyNodes) {
+      free(current->node);
+    }
+    free(current);
+
+    current = next;
+  }
 }
 
 void printNode(const struct Node *node, const int depth) {

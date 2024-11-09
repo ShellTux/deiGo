@@ -119,14 +119,14 @@ Program: PACKAGE IDENTIFIER SEMICOLON Declarations {
 
 Declarations : VarDeclaration SEMICOLON Declarations {
 		    addNode(&$$, $1);
-		    addNodes($$, $3);
+		    addNodes(&$$, $3);
 		}
 	| VarDeclaration SEMICOLON {
 		    addNode(&$$, $1);
 		}
 	| FuncDeclaration SEMICOLON Declarations {
 		    addNode(&$$, $1);
-		    addNodes($$, $3);
+		    addNodes(&$$, $3);
 		}
 	| FuncDeclaration SEMICOLON {
 			addNode(&$$, $1);
@@ -259,6 +259,8 @@ int main(int argc, char **argv) {
 	// ....FuncHeader                            |
 	// ......Identifier(main)    | Parameters    | Func
 	// ......FuncParams          |               |
+	// ......Identifier(main)    | Parameters2   |
+	// ......FuncParams          |               |
 	// ....FuncBody                              |
 	program = createNode(Program, NULL);
 	struct Node *funcDecl = addChild(program, createNode(FuncDecl, NULL));
@@ -272,6 +274,12 @@ int main(int argc, char **argv) {
 	struct NodeList *params = NULL;
 	addNode(&params, createNode(Identifier, "main"));
 	addNode(&params, createNode(FuncParams, NULL));
+
+	struct NodeList *params2 = NULL;
+	addNode(&params2, createNode(Identifier, "main"));
+	addNode(&params2, createNode(FuncParams, NULL));
+
+	addNodes(&params, params2);
 
 	addChilds(funcHeader, params);
 

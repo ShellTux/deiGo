@@ -1,6 +1,7 @@
 #ifndef INCLUDE_INCLUDE_GOCOMPILER_H_
 #define INCLUDE_INCLUDE_GOCOMPILER_H_
 
+#include <stdbool.h>
 #include <stddef.h>
 
 void tokenPreHook(void);
@@ -261,7 +262,7 @@ struct Node *createNode(const enum Category tokenType, const char *tokenValue);
  * @param list2 A pointer to the second linked list to be appended.
  * @return A pointer to the modified first linked list.
  */
-struct NodeList *addNodes(struct NodeList *list1, struct NodeList *list2);
+struct NodeList *addNodes(struct NodeList **list1, struct NodeList *list2);
 
 /**
  * @function addNode
@@ -276,6 +277,28 @@ struct NodeList *addNodes(struct NodeList *list1, struct NodeList *list2);
  * @return A pointer to the modified linked list.
  */
 struct Node *addNode(struct NodeList **nodeList, struct Node *node);
+
+/**
+ * @function destroyList
+ * Cleans up and frees the memory associated with a linked list of nodes.
+ * Optionally destroys the individual nodes in the list.
+ *
+ * @param list A pointer to the linked list to be destroyed. The list itself
+ * will be freed, but if `destroyNodes` is true, the individual nodes will also
+ * be freed.
+ *
+ * @param destroyNodes A boolean value that determines whether to free the
+ * memory of the nodes within the linked list. If true, each node will be freed;
+ *                     if false, only the list structure will be freed, leaving
+ *                     the nodes intact.
+ *
+ * @return void This function does not return a value. It is intended for side
+ * effects of memory management.
+ *
+ * @note It is the caller's responsibility to ensure that the linked list is
+ * properly allocated before calling this function to avoid undefined behavior.
+ */
+void destroyList(struct NodeList *list, const bool destroyNodes);
 
 /**
  * @function printNode
