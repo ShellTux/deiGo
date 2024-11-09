@@ -129,17 +129,20 @@ struct Node *addChild(struct Node *parent, const struct Node *childNode) {
       .node = (struct Node *)childNode,
   };
 
-  struct NodeList *child = NULL;
-
   if (parent->children == NULL) {
     parent->children = childrenNodeList;
     return (struct Node *)childNode;
   }
 
-  for (child = parent->children; child != NULL && child->next != NULL;
+  for (struct NodeList *child = parent->children; child != NULL;
        child = child->next) {
+    if (child->next != NULL) {
+      continue;
+    }
+
+    child->next = childrenNodeList;
+    break;
   }
-  child->next = childrenNodeList;
 
   return (struct Node *)childNode;
 }
@@ -187,10 +190,14 @@ struct Node *addNode(struct NodeList **listP, struct Node *node) {
     return node;
   }
 
-  struct NodeList *list = *listP;
-  for (; list != NULL && list->next != NULL; list = list->next) {
+  for (struct NodeList *list = *listP; list != NULL; list = list->next) {
+    if (list->next != NULL) {
+      continue;
+    }
+
+    list->next = newNode;
+    break;
   }
-  list->next = newNode;
 
   return node;
 }
