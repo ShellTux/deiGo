@@ -15,6 +15,7 @@
 // }
 %union {
 	struct Node *node;
+	struct NodeList *list;
 	char *string;
 	double decimal;
 	int natural;
@@ -68,7 +69,8 @@
 %token<string> RESERVED
 %token<string> STRLIT
 
-%type<node> Declarations
+%type<list> Declarations
+
 %type<node> Expr
 %type<node> Expr2
 %type<node> Expr3
@@ -111,15 +113,34 @@
 
 Program: PACKAGE IDENTIFIER SEMICOLON Declarations {
        $$ = program = createNode(Program, NULL);
+	addSibling($$, $4);
    }
    ;
 
-Declarations: FuncDeclaration SEMICOLON {}
-	    | VarDeclaration SEMICOLON {}
-	;
+Declarations : VarDeclaration SEMICOLON Declarations {
+		    $$ = createNodeList();
+		    addNode($$, $1);
+		    addNodes($$, $3);
+		}
+	| VarDeclaration SEMICOLON {
+		    addNode($$, $1);
+		}
+	| FuncDeclaration SEMICOLON Declarations {
+		    if ($$ == NULL) $$ = createNodeList();
+		    addNode($$, $1);
+		    addNodes($$, $3);
+		}
+	| FuncDeclaration SEMICOLON {
+			addNode($$, $1);
+		}
+;
 
-VarDeclaration: VAR VarSpec {}
-	      | VAR LPAR VarSpec SEMICOLON RPAR {}
+VarDeclaration: VAR VarSpec {
+			$$ = $2;
+		      }
+	      | VAR LPAR VarSpec SEMICOLON RPAR {
+			$$ = $3;
+		      }
 	;
 
 VarSpec: IDENTIFIER VarSpecs Type {}
@@ -129,10 +150,10 @@ VarSpecs: COMMA IDENTIFIER VarSpecs {}
 	| {}
 	;
 
-Type: INT {}
-    | FLOAT32 {}
-    | BOOL  {}
-    | STRING {}
+Type: INT     { $$ = createNode(Int, NULL); }
+    | FLOAT32 { $$ = createNode(Float32, NULL); }
+    | BOOL    { $$ = createNode(Bool, NULL); }
+    | STRING  { $$ = createNode(String, NULL); }
     ;
 
 FuncDeclaration: FUNC FuncHeader FuncBody {}
@@ -189,28 +210,28 @@ ExprList: COMMA Expr ExprList {}
 	| {}
 	;
 
-Expr: Expr OR Expr {}
-    | Expr AND Expr {}
-    | Expr LT Expr {}
-    | Expr GT Expr {}
-    | Expr EQ Expr {}
-    | Expr NE Expr {}
-    | Expr LE Expr {}
-    | Expr GE Expr {}
-    | Expr PLUS Expr {}
-    | Expr MINUS Expr {}
-    | Expr STAR Expr {}
-    | Expr DIV Expr {}
-    | Expr MOD Expr {}
-    | NOT Expr {}
-    | MINUS Expr %prec UNARY {}
-    | PLUS Expr %prec UNARY {}
-    | NATURAL {}
-    | DECIMAL {}
-    | IDENTIFIER {}
-    | FuncInvocation {}
-    | LPAR Expr RPAR {}
-    | LPAR error RPAR {}
+Expr: Expr OR Expr           { $$ = createNode(Or, NULL);    addChild($$, $1); addChild($$, $3); }
+    | Expr AND Expr          { $$ = createNode(And, NULL);   addChild($$, $1); addChild($$, $3); }
+    | Expr LT Expr           { $$ = createNode(Lt, NULL);    addChild($$, $1); addChild($$, $3); }
+    | Expr GT Expr           { $$ = createNode(Gt, NULL);    addChild($$, $1); addChild($$, $3); }
+    | Expr EQ Expr           { $$ = createNode(Eq, NULL);    addChild($$, $1); addChild($$, $3); }
+    | Expr NE Expr           { $$ = createNode(Ne, NULL);    addChild($$, $1); addChild($$, $3); }
+    | Expr LE Expr           { $$ = createNode(Le, NULL);    addChild($$, $1); addChild($$, $3); }
+    | Expr GE Expr           { $$ = createNode(Ge, NULL);    addChild($$, $1); addChild($$, $3); }
+    | Expr PLUS Expr         { $$ = createNode(Plus, NULL);  addChild($$, $1); addChild($$, $3); }
+    | Expr MINUS Expr        { $$ = createNode(Minus, NULL); addChild($$, $1); addChild($$, $3); }
+    | Expr STAR Expr         { $$ = createNode(Star, NULL);  addChild($$, $1); addChild($$, $3); }
+    | Expr DIV Expr          { $$ = createNode(Div, NULL);   addChild($$, $1); addChild($$, $3); }
+    | Expr MOD Expr          { $$ = createNode(Mod, NULL);   addChild($$, $1); addChild($$, $3); }
+    | NOT Expr               { $$ = createNode(Not, NULL);   addChild($$, $2); }
+    | MINUS Expr %prec UNARY { $$ = createNode(Not, NULL);   addChild($$, $2); }
+    | PLUS Expr %prec UNARY  { $$ = createNode(Not, NULL);   addChild($$, $2); }
+    | NATURAL                { $$ = createNode(Natural, $1); }
+    | DECIMAL                { $$ = createNode(Natural, $1); }
+    | IDENTIFIER             { $$ = createNode(Natural, $1); }
+    | FuncInvocation         { $$ = $1; }
+    | LPAR Expr RPAR         { $$ = $2; }
+    | LPAR error RPAR        { }
     ;
 
 BlockProduction: LBRACE StatementList RBRACE {}

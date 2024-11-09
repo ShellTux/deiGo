@@ -199,6 +199,12 @@ struct NodeList {
   struct NodeList *next;
 };
 
+struct NodeList *createNodeList(void);
+struct Node *addSiblings(struct Node *parent, struct NodeList *siblings);
+struct NodeList *addNode(struct NodeList *nodeList, struct Node *node);
+struct NodeList *addNodes(struct NodeList *nodeList1,
+                          struct NodeList *nodeList2);
+
 void printNodeList(const struct NodeList *nodeList, const int depth);
 
 // }}}
