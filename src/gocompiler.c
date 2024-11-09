@@ -110,7 +110,7 @@ struct Node *createNode(const enum Category tokenType, const char *tokenValue) {
   struct Node *node = malloc(sizeof(*node));
   *node = (struct Node){
       .tokenType = tokenType,
-      .tokenValue = (char *)tokenValue,
+      .tokenValue = tokenValue == NULL ? NULL : strdup(tokenValue),
       .children = NULL,
   };
   return node;
