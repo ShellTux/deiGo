@@ -228,7 +228,11 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 {lineterminator}	{
 				nextLine();
 
-				checkLastToken();
+				if (checkLastToken() && !(debugMode & Lexer)) {
+					lastToken = L_OTHER;
+					return SEMICOLON;
+				}
+
 				lastToken = L_OTHER;
 			}
 ({whitespace}+|"//".*)	{;}
@@ -319,7 +323,7 @@ void printLastToken(void) {
 	printToken(lastToken);
 }
 
-inline void checkLastToken(void) {
+bool checkLastToken(void) {
 	switch (lastToken) {
 		case L_NATURAL:
 		case L_DECIMAL:
@@ -330,10 +334,13 @@ inline void checkLastToken(void) {
 		case L_RSQ:
 		case L_RBRACE:
 			printToken(L_SEMICOLON);
+			return true;
 			break;
 		default:
 			break;
 	}
+
+	return false;
 }
 
 void stringAppend(struct String *dest, const char *src) {

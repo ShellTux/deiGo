@@ -88,7 +88,7 @@ typedef enum {
 #undef TOKEN
 } LexerToken;
 
-void checkLastToken(void);
+bool checkLastToken(void);
 void printLastToken(void);
 void printLex(const char *token, const char *_string);
 void printLexF(const char *format, const char *string);
