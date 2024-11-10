@@ -172,20 +172,6 @@ enum Category {
 
 void printCategory(const enum Category category);
 
-typedef struct TreeNode {
-  enum Category category;
-  char *token;
-  struct TreeNode *newBranch;
-  struct TreeNode *currentBranch;
-} TreeNode;
-
-TreeNode *newNode(const enum Category category, char *token,
-                  TreeNode *newBranch);
-void linkChild(TreeNode *parent, TreeNode *newBranch);
-void linkInLevel(TreeNode *node, TreeNode *nodeLevel);
-void shiftInsertNode(TreeNode *parent, TreeNode *nodeNew);
-void showNode(TreeNode *node, int depth);
-
 /**
  * @struct Node
  * Represents a node in a tree-like structure.
