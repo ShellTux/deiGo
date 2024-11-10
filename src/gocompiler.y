@@ -399,6 +399,9 @@ Expr: Expr OR Expr {
     | NATURAL {
            $$ = createNode(Natural, $1);
        }
+    | DECIMAL {
+           $$ = createNode(Decimal, $1);
+       }
     | IDENTIFIER {
            $$ = createNode(Identifier, $1);
        }
