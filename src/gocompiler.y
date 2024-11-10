@@ -5,7 +5,6 @@
 	#include "gocompiler.h"
 
 	enum DebugMode debugMode = None;
-	TreeNode *programT;
 	struct Node *program = NULL;
 %}
 
