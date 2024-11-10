@@ -107,20 +107,20 @@ Program: PACKAGE IDENTIFIER SEMICOLON Declarations {
    ;
 
 Declarations: VarDeclaration SEMICOLON Declarations {
-                 addNode(&$$, $1);
-                 addNodes(&$$, $3);
+		 $$ = createNodeList($1);
+		 addNodes($$, $3);
               }
               | FuncDeclaration SEMICOLON Declarations {
-                 addNode(&$$, $1);
-                 addNodes(&$$, $3);
+		 $$ = createNodeList($1);
+		 addNodes($$, $3);
               }
               | VarDeclaration SEMICOLON {
-                 addNode(&$$, $1);
+		 $$ = createNodeList($1);
               }
               | FuncDeclaration SEMICOLON {
-                 addNode(&$$, $1);
+		 $$ = createNodeList($1);
               }
-              | /* epsilon */ {}
+              | /* epsilon */ { $$ = createNodeList(NULL); }
 ;
 
 VarDeclaration: VAR VarSpec {
@@ -134,16 +134,16 @@ VarDeclaration: VAR VarSpec {
 ;
 
 VarSpec: IDENTIFIER VarSpecs Type {
-           addNode(&$$, createNode(Identifier, $1));
+	   $$ = createNodeList(createNode(Identifier, $1));
            // addNodes(&$$, $3);
         }
 ;
 
 VarSpecs: COMMA IDENTIFIER VarSpecs {
-              addNode(&$$, createNode(Identifier, $2));
-              addNodes(&$$, $3);
+	      $$ = createNodeList(createNode(Identifier, $2));
+              addNodes($$, $3);
           }
-         | /* epsilon */ {}
+         | /* epsilon */ { $$ = createNodeList(NULL); }
 ;
 
 Type: INT {
@@ -177,28 +177,30 @@ FuncHeader: IDENTIFIER LPAR FuncParams RPAR Type {
                $$ = createNode(FuncHeader, NULL);
                addChild($$, createNode(Identifier, $1));
                addChild($$, $3);
+	       debugSyntaxRule("FuncHeader -> IDENTIFIER LPAR FuncParams RPAR", $$, NULL);
            }
 ;
 
 FuncBody: LBRACE VarsAndStatements RBRACE {
               $$ = createNode(FuncBody, NULL);
               addChilds($$, $2);
+	      debugSyntaxRule("FuncBody -> LBRACE VarsAndStatements RBRACE", $$, NULL);
           }
 ;
 
 FuncParams: ParamDecl FuncParamsList {
+	  	$$ = createNode(FuncParams, NULL);
 		addChild($$, $1);
                 addChilds($$, $2);
             }
-          | /* epsilon */ {}
+          | /* epsilon */ { $$ = createNode(FuncParams, NULL); }
 ;
 
 FuncParamsList: COMMA ParamDecl FuncParamsList {
-                   addNode(&$$, $2);
-                   addNodes(&$$, $3);
+		      $$ = createNodeList($2);
+		      addNodes($$, $3);
                }
-             | /* epsilon */ {
-               }
+             | /* epsilon */ { $$ = createNodeList(NULL); }
 ;
 
 ParamDecl: IDENTIFIER Type {
@@ -208,14 +210,14 @@ ParamDecl: IDENTIFIER Type {
           }
 ;
 
-VarsAndStatements: /* epsilon */ {}
+VarsAndStatements: /* epsilon */ { $$ = createNodeList(NULL); }
                  | VarDeclaration SEMICOLON VarsAndStatements {
-                     addNode(&$$, $1);
-                     addNodes(&$$, $3);
+		     $$ = createNodeList($1);
+                     addNodes($$, $3);
                  }
                  | Statement SEMICOLON VarsAndStatements {
-                     addNode(&$$, $1);
-                     addNodes(&$$, $3);
+		     $$ = createNodeList($1);
+		     addNodes($$, $3);
                  }
 ;
 
@@ -287,10 +289,10 @@ FuncInvocation: IDENTIFIER LPAR RPAR {
 ;
 
 ExprList: COMMA Expr ExprList {
-              addNode(&$$, $2);
-              addNodes(&$$, $3);
+	      $$ = createNodeList($2);
+              addNodes($$, $3);
           }
-         | /* epsilon */ {}
+         | /* epsilon */ { $$ = createNodeList(NULL); }
 ;
 
 Expr: Expr OR Expr {
@@ -388,15 +390,15 @@ Expr: Expr OR Expr {
 ;
 
 BlockProduction: LBRACE StatementList RBRACE {
-                   addNodes(&$$, $2);
+		   $$ = $2;
                }
 ;
 
 StatementList: Statement SEMICOLON StatementList {
-                  addNode(&$$, $1);
-                  addNodes(&$$, $3);
+		  $$ = createNodeList($1);
+                  addNodes($$, $3);
               }
-              | /* epsilon */ {}
+              | /* epsilon */ { $$ = createNodeList(NULL); }
 ;
 
 %%

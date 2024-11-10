@@ -29,6 +29,18 @@ struct Node *createNode(const enum Category tokenType, const char *tokenValue) {
   return node;
 }
 
+struct NodeList *createNodeList(struct Node *node) {
+  const struct NodeList empty = {
+      .node = node,
+      .next = NULL,
+  };
+
+  struct NodeList *list = malloc(sizeof(*list));
+  *list = empty;
+
+  return list;
+}
+
 struct Node *addChild(struct Node *parent, const struct Node *childNode) {
   if (parent == NULL || childNode == NULL) {
     return NULL;
@@ -74,38 +86,35 @@ struct NodeList *addChilds(struct Node *parent, struct NodeList *childList) {
   return childList;
 }
 
-struct NodeList *addNodes(struct NodeList **list1, struct NodeList *list2) {
+struct NodeList *addNodes(struct NodeList *list1, struct NodeList *list2) {
+  if (list1 == NULL || list2 == NULL) {
+    return list1;
+  }
+
   for (struct NodeList *list = list2; list != NULL; list = list->next) {
     addNode(list1, list->node);
   }
 
   destroyList(list2, false);
-  return *list1;
+  return list1;
 }
 
-struct Node *addNode(struct NodeList **listP, struct Node *node) {
-  if (listP == NULL || node == NULL) {
+struct Node *addNode(struct NodeList *list, struct Node *node) {
+  if (list == NULL || node == NULL) {
     return NULL;
   }
 
-  struct NodeList *newNode = malloc(sizeof(*newNode));
-  *newNode = (struct NodeList){
-      .node = node,
-      .next = NULL,
-  };
-
-  if (*listP == NULL) {
-    *listP = newNode;
-
-    return node;
-  }
-
-  for (struct NodeList *list = *listP; list != NULL; list = list->next) {
-    if (list->next != NULL) {
+  for (struct NodeList *listC = list; listC != NULL; listC = listC->next) {
+    if (listC->next != NULL) {
       continue;
     }
 
-    list->next = newNode;
+    if (listC->node == NULL) {
+      listC->node = node;
+    } else {
+      listC->next = createNodeList(node);
+    }
+
     break;
   }
 

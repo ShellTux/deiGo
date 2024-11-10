@@ -241,6 +241,24 @@ struct NodeList *addChilds(struct Node *parent, struct NodeList *childList);
 struct Node *createNode(const enum Category tokenType, const char *tokenValue);
 
 /**
+ * @function createNodeList
+ * Creates a new NodeList containing a single node. The node is dynamically
+ * allocated in the heap and linked into the list.
+ *
+ * @param node A pointer to the Node to be added to the new NodeList. This node
+ * must be dynamically allocated before calling this function.
+ *
+ * @return A pointer to the newly created NodeList containing the given node. If
+ * the input node is NULL, the function will return an empty list
+ * {.node = NULL, .next = NULL}.
+ *
+ * @note The caller is responsible for freeing the memory associated with the
+ * created NodeList and its nodes when they are no longer needed to avoid memory
+ * leaks.
+ */
+struct NodeList *createNodeList(struct Node *node);
+
+/**
  * @function addNodes
  * Appends all nodes from the second linked list to the first linked list.
  *
@@ -248,7 +266,7 @@ struct Node *createNode(const enum Category tokenType, const char *tokenValue);
  * @param list2 A pointer to the second linked list to be appended.
  * @return A pointer to the modified first linked list.
  */
-struct NodeList *addNodes(struct NodeList **list1, struct NodeList *list2);
+struct NodeList *addNodes(struct NodeList *list1, struct NodeList *list2);
 
 /**
  * @function addNode
@@ -262,7 +280,7 @@ struct NodeList *addNodes(struct NodeList **list1, struct NodeList *list2);
  * @param node A pointer to the node to be added.
  * @return A pointer to the modified linked list.
  */
-struct Node *addNode(struct NodeList **nodeList, struct Node *node);
+struct Node *addNode(struct NodeList *nodeList, struct Node *node);
 
 /**
  * @function destroyList
