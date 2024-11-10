@@ -4,6 +4,8 @@
 
 	#include "gocompiler.h"
 
+	void debugSyntaxRule(const char *rule, const struct Node *node, const struct NodeList *list);
+
 	enum DebugMode debugMode = None;
 	struct Node *program = NULL;
 %}
@@ -103,6 +105,7 @@
 Program: PACKAGE IDENTIFIER SEMICOLON Declarations {
            $$ = createNode(Program, NULL);
            addChilds($$, $4);
+	   debugSyntaxRule("Program -> PACKAGE IDENTIFIER SEMICOLON Declarations", $$, NULL);
        }
    ;
 
@@ -402,6 +405,24 @@ StatementList: Statement SEMICOLON StatementList {
 ;
 
 %%
+
+void debugSyntaxRule(const char *rule, const struct Node *node, const struct NodeList *list) {
+#ifndef DEBUG
+	(void) rule;
+	(void) node;
+	(void) list;
+#else
+	if (rule == NULL) {
+		return;
+	}
+
+	printf("%s\n", rule);
+	printNode(node, 0);
+	printNodeList(list, 0);
+
+	printf("\n");
+#endif
+}
 
 int main(int argc, char **argv) {
 	for (int i = 1; i < argc; ++i) {
