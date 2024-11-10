@@ -103,7 +103,7 @@
 %%
 
 Program: PACKAGE IDENTIFIER SEMICOLON Declarations {
-           $$ = createNode(Program, NULL);
+           $$ = program = createNode(Program, NULL);
            addChilds($$, $4);
 	   debugSyntaxRule("Program -> PACKAGE IDENTIFIER SEMICOLON Declarations", $$, NULL);
        }
