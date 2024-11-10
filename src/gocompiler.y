@@ -72,7 +72,6 @@
 %type<list> FuncParamsList
 %type<list> StatementList
 %type<list> VarsAndStatements
-%type<list> VarSpec
 %type<list> VarSpecs
 
 %type<node> Expr
@@ -126,25 +125,23 @@ Declarations: VarDeclaration SEMICOLON Declarations {
               | /* epsilon */ { $$ = createNodeList(NULL); }
 ;
 
-VarDeclaration: VAR VarSpec {
+VarDeclaration: VAR IDENTIFIER VarSpecs Type {
                      $$ = createNode(VarDecl, NULL);
-                     addChilds($$, $2);
-                 }
-              | VAR LPAR VarSpec SEMICOLON RPAR {
-                     $$ = createNode(VarDecl, NULL);
+                     addChild($$, $4);
+                     addChild($$, createNode(Identifier, $2));
                      addChilds($$, $3);
                  }
+              | VAR LPAR IDENTIFIER VarSpecs Type SEMICOLON RPAR {
+                     $$ = createNode(VarDecl, NULL);
+                     addChild($$, $5);
+                     addChild($$, createNode(Identifier, $3));
+                     addChilds($$, $4);
+                 }
 ;
 
-VarSpec: IDENTIFIER VarSpecs Type {
-	   $$ = createNodeList(createNode(Identifier, $1));
-           // addNodes(&$$, $3);
-        }
-;
 
 VarSpecs: COMMA IDENTIFIER VarSpecs {
-	      $$ = createNodeList(createNode(Identifier, $2));
-              addNodes($$, $3);
+		addNodes($$, $3);
           }
          | /* epsilon */ { $$ = createNodeList(NULL); }
 ;
@@ -173,8 +170,8 @@ FuncDeclaration: FUNC FuncHeader FuncBody {
 FuncHeader: IDENTIFIER LPAR FuncParams RPAR Type {
                $$ = createNode(FuncHeader, NULL);
                addChild($$, createNode(Identifier, $1));
+	       addChild($$, $5);
                addChild($$, $3);
-               addChild($$, $5);
            }
           | IDENTIFIER LPAR FuncParams RPAR {
                $$ = createNode(FuncHeader, NULL);
