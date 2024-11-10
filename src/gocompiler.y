@@ -208,8 +208,8 @@ FuncParamsList: COMMA ParamDecl FuncParamsList {
 
 ParamDecl: IDENTIFIER Type {
               $$ = createNode(ParamDecl, NULL);
-              addChild($$, createNode(Identifier, $1));
               addChild($$, $2);
+              addChild($$, createNode(Identifier, $1));
           }
 ;
 
