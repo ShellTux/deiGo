@@ -95,10 +95,10 @@ INT			"int"
 FLOAT32			"float32"
 BOOL			"bool"
 STRING			"string"
-PRINT			"fmt\.Println"
-PARSEINT		"strconv\.Atoi"
+PRINT			"fmt.Println"
+PARSEINT		"strconv.Atoi"
 FUNC			"func"
-CMDARGS			"os\.Args"
+CMDARGS			"os.Args"
 
 RESERVED		(break|default|func|interface|select|case|defer|go|map|struct|chan|else|goto|package|switch|const|fallthrough|if|range|type|continue|for|import|return|var|\+\+|--)
 NATURAL			(0|{HEXADECIMAL}|{OCTAL}|[1-9][0-9]*)
