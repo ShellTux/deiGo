@@ -126,12 +126,10 @@ typedef void (*PrintLexFunction)(const char *, const char *);
 
 #define TOKEN_ROOT CATEGORY(Program)
 
-/* Declaração de variáveis */
 #define TOKEN_VARDECL                                                          \
   CATEGORY(VarDecl)                                                            \
   CATEGORY(Declarations)
 
-/* Declaração/definição de funções */
 #define TOKEN_DECL_DEF_FUNC                                                    \
   CATEGORY(FuncDecl)                                                           \
   CATEGORY(FuncHeader)                                                         \
@@ -139,7 +137,6 @@ typedef void (*PrintLexFunction)(const char *, const char *);
   CATEGORY(FuncBody)                                                           \
   CATEGORY(ParamDecl)
 
-/* Statements */
 #define TOKEN_STATEMENTS                                                       \
   CATEGORY(Block)                                                              \
   CATEGORY(If)                                                                 \
@@ -149,7 +146,6 @@ typedef void (*PrintLexFunction)(const char *, const char *);
   CATEGORY(Print)                                                              \
   CATEGORY(ParseArgs)
 
-/* Operadores */
 #define TOKEN_OPERATORS                                                        \
   CATEGORY(Or)                                                                 \
   CATEGORY(And)                                                                \

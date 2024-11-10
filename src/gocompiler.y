@@ -406,7 +406,7 @@ Expr: Expr OR Expr {
            $$ = createNode(Identifier, $1);
        }
     | FuncInvocation {
-           $$ = $1; // Inheriting FuncInvocation's structure
+           $$ = $1;
        }
     | LPAR Expr RPAR {
            $$ = $2;
