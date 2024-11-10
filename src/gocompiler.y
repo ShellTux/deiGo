@@ -312,8 +312,8 @@ FuncInvocation: IDENTIFIER LPAR RPAR {
                }
 ;
 
-ExprList: COMMA Expr ExprList {
-	      $$ = createNodeList($2);
+ExprList: ExprList COMMA Expr {
+	      $$ = createNodeList($3);
               addNodes($$, $3);
           }
          | /* epsilon */ { $$ = createNodeList(NULL); }
