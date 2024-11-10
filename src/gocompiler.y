@@ -59,9 +59,9 @@
 %token STRING
 %token VAR
 
+%token<string> DECIMAL
 %token<string> IDENTIFIER
 %token<string> NATURAL
-%token<string> DECIMAL
 %token<string> RESERVED
 %token<string> STRLIT
 
@@ -71,8 +71,8 @@
 %type<list> FuncParamsList
 %type<list> StatementList
 %type<list> VarsAndStatements
-%type<list> VarSpecs
 %type<list> VarSpec
+%type<list> VarSpecs
 
 %type<node> Expr
 %type<node> FuncBody
