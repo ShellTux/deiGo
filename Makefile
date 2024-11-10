@@ -37,7 +37,7 @@ $(YACC_OUTPUT) $(YACC_HEADER): $(YACC_SRC)
 	mkdir --parents "$(shell dirname "$@")"
 	$(BISON) --verbose --report-file=$(REPORT_FILE) --header=$(YACC_HEADER) --output=$(YACC_OUTPUT) --debug $^
 
-$(COMPILER_ZIP): src/gocompiler.l
+$(COMPILER_ZIP): include/gocompiler.h src/gocompiler.c src/gocompiler.l src/gocompiler.y
 	rm --force $@
 	zip --junk-paths $@ $^
 
