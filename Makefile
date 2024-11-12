@@ -2,6 +2,9 @@ CC    = clang
 FLEX  = flex
 BISON = bison
 
+BISON_FLAGS += --verbose
+BISON_FLAGS += --color=always
+
 LEX_SRC  = src/gocompiler.l
 YACC_SRC = src/gocompiler.y
 
@@ -35,7 +38,7 @@ $(LEX_OUTPUT): $(LEX_SRC)
 
 $(YACC_OUTPUT) $(YACC_HEADER): $(YACC_SRC)
 	mkdir --parents "$(shell dirname "$@")"
-	$(BISON) --verbose --report-file=$(REPORT_FILE) --header=$(YACC_HEADER) --output=$(YACC_OUTPUT) --debug $^
+	$(BISON) $(BISON_FLAGS) --report-file=$(REPORT_FILE) --header=$(YACC_HEADER) --output=$(YACC_OUTPUT) --debug $^
 
 $(COMPILER_ZIP): include/gocompiler.h src/gocompiler.c src/gocompiler.l src/gocompiler.y
 	rm --force $@
