@@ -31,7 +31,9 @@
 	void debugSyntaxRule(const char *rule, const struct Node *node, const struct NodeList *list);
 
 	enum DebugMode debugMode = None;
+	int syntaxErrors = 0;
 	struct Node *program = NULL;
+	extern int errors;
 %}
 
 %union {
@@ -402,7 +404,7 @@ Expr: Expr OR Expr {
            $$ = $2;
        }
     | LPAR error RPAR {
-           // $$ = createNode(ErrorNode, NULL);
+	   $$ = NULL; syntaxErrors++;
        }
 ;
 
@@ -488,7 +490,7 @@ int main(int argc, char **argv) {
 #endif
 	yyparse();
 
-	if (debugMode & Parser) {
+	if ((debugMode & Parser) && (errors <= 0) && (syntaxErrors <= 0)) {
 		printNode(program, 0);
 	}
 #endif
