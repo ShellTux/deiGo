@@ -2,6 +2,7 @@ CC    = clang
 FLEX  = flex
 BISON = bison
 
+BISON_FLAGS += --warnings=error=all
 BISON_FLAGS += --verbose
 BISON_FLAGS += --color=always
 

@@ -110,16 +110,12 @@
 %type<node> Type
 %type<node> VarDeclaration
 
-
-%left COMMA
-%right ASSIGN
 %left OR
 %left AND
 %left GE LE LT GT EQ NE
 %left PLUS MINUS
 %left STAR DIV MOD
-%right UNARY
-%left LPAR RPAR LSQ RSQ LBRACE RBRACE
+%precedence UNARY
 
 %start Program
 
@@ -140,13 +136,7 @@ Declarations: VarDeclaration SEMICOLON Declarations {
 		 $$ = createNodeList($1);
 		 addNodes($$, $3);
               }
-              | VarDeclaration SEMICOLON {
-		 $$ = createNodeList($1);
-              }
-              | FuncDeclaration SEMICOLON {
-		 $$ = createNodeList($1);
-              }
-              | /* epsilon */ { $$ = createNodeList(NULL); }
+              | /* epsilon */  %empty { $$ = createNodeList(NULL); }
 ;
 
 VarDeclaration: VAR IDENTIFIER VarSpecs Type {
@@ -167,7 +157,7 @@ VarDeclaration: VAR IDENTIFIER VarSpecs Type {
 VarSpecs: COMMA IDENTIFIER VarSpecs {
 		addNodes($$, $3);
           }
-         | /* epsilon */ { $$ = createNodeList(NULL); }
+         | /* epsilon */  %empty { $$ = createNodeList(NULL); }
 ;
 
 Type: INT {
@@ -217,14 +207,14 @@ FuncParams: ParamDecl FuncParamsList {
 		addChild($$, $1);
                 addChilds($$, $2);
             }
-          | /* epsilon */ { $$ = createNode(FuncParams, NULL); }
+          | /* epsilon */  %empty { $$ = createNode(FuncParams, NULL); }
 ;
 
 FuncParamsList: COMMA ParamDecl FuncParamsList {
 		      $$ = createNodeList($2);
 		      addNodes($$, $3);
                }
-             | /* epsilon */ { $$ = createNodeList(NULL); }
+             | /* epsilon */  %empty { $$ = createNodeList(NULL); }
 ;
 
 ParamDecl: IDENTIFIER Type {
@@ -234,7 +224,7 @@ ParamDecl: IDENTIFIER Type {
           }
 ;
 
-VarsAndStatements: /* epsilon */ { $$ = createNodeList(NULL); }
+VarsAndStatements: /* epsilon */  %empty { $$ = createNodeList(NULL); }
                  | VarDeclaration SEMICOLON VarsAndStatements {
 		     $$ = createNodeList($1);
                      addNodes($$, $3);
@@ -316,7 +306,7 @@ ExprList: ExprList COMMA Expr {
 	      $$ = createNodeList($3);
               addNodes($$, $1);
           }
-         | /* epsilon */ { $$ = createNodeList(NULL); }
+         | /* epsilon */  %empty { $$ = createNodeList(NULL); }
 ;
 
 Expr: Expr OR Expr {
@@ -384,7 +374,7 @@ Expr: Expr OR Expr {
            addChild($$, $1);
            addChild($$, $3);
        }
-    | NOT Expr {
+    | NOT Expr %prec UNARY {
            $$ = createNode(Not, NULL);
            addChild($$, $2);
        }
@@ -425,7 +415,7 @@ StatementList: Statement SEMICOLON StatementList {
 		  $$ = createNodeList($1);
                   addNodes($$, $3);
               }
-              | /* epsilon */ { $$ = createNodeList(NULL); }
+              | /* epsilon */  %empty { $$ = createNodeList(NULL); }
 ;
 
 %%
