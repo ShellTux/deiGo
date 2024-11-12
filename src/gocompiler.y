@@ -107,6 +107,7 @@
 %type<node> FuncInvocation
 %type<node> FuncParams
 %type<node> ParamDecl
+%type<node> ParseArgs
 %type<node> Program
 %type<node> Statement
 %type<node> Type
@@ -276,6 +277,7 @@ Statement: IDENTIFIER ASSIGN Expr {
           | FuncInvocation {
                  $$ = $1;
              }
+          | ParseArgs { $$ = $1; }
           | PRINT LPAR Expr RPAR {
                  $$ = createNode(Print, NULL);
                  addChild($$, $3);
@@ -287,6 +289,15 @@ Statement: IDENTIFIER ASSIGN Expr {
                  // $$ = createNode(ErrorNode, NULL);
              }
 ;
+
+
+ParseArgs: IDENTIFIER COMMA BLANKID ASSIGN PARSEINT LPAR CMDARGS LSQ Expr RSQ RPAR {
+			$$ = createNode(ParseArgs, NULL);
+			addChild($$, createNode(Identifier, $1));
+			addChild($$, $9);
+		}
+	 ;
+
 
 FuncInvocation: IDENTIFIER LPAR RPAR {
                    $$ = createNode(Call, NULL);
@@ -352,17 +363,17 @@ Expr: Expr OR Expr {
            addChild($$, $3);
        }
     | Expr PLUS Expr {
-           $$ = createNode(Plus, NULL);
+           $$ = createNode(Add, NULL);
            addChild($$, $1);
            addChild($$, $3);
        }
     | Expr MINUS Expr {
-           $$ = createNode(Minus, NULL);
+           $$ = createNode(Sub, NULL);
            addChild($$, $1);
            addChild($$, $3);
        }
     | Expr STAR Expr {
-           $$ = createNode(Star, NULL);
+           $$ = createNode(Mul, NULL);
            addChild($$, $1);
            addChild($$, $3);
        }
@@ -409,7 +420,11 @@ Expr: Expr OR Expr {
 ;
 
 BlockProduction: LBRACE StatementList RBRACE {
-		   $$ = $2;
+			struct Node *bcl = createNode(Block, NULL);
+			addChilds(bcl, $2);
+			struct NodeList *lst = createNodeList(bcl);
+			addNode(lst, createNode(Block, NULL));
+			$$ = lst;
                }
 ;
 
