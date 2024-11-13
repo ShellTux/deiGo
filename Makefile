@@ -54,7 +54,7 @@ run: $(COMPILER)
 
 .PHONY: test
 test: $(COMPILER)
-	./test.sh --metas=1,2 --color=always
+	./test.sh --metas=1,2 --color=always $(TEST_FLAGS)
 
 .PHONY: clean
 clean:
