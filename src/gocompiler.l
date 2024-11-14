@@ -239,7 +239,10 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 {INVALID_OCTAL}		{ PRINT_ERROR("invalid octal constant (%s)", lexerPos.line, lexerPos.column - yyleng, yytext); }
 .			{ PRINT_ERROR("illegal character (%s)", lexerPos.line, lexerPos.column - yyleng, yytext); }
 <<EOF>>			{
-				checkLastToken();
+				if (checkLastToken()) {
+					lastToken = L_OTHER;
+					return SEMICOLON;
+				}
 				lastToken = L_OTHER;
 				yyterminate();
 			}
