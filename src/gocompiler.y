@@ -25,8 +25,11 @@
 %{
 	#include <stdio.h>
 	#include <stdbool.h>
+        #include <string.h>
 
 	#include "gocompiler.h"
+
+        int yylex(void);
 
 	void debugSyntaxRule(const char *rule, const struct Node *node, const struct NodeList *list);
 

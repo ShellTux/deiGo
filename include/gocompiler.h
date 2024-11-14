@@ -28,6 +28,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+void usage(const char *const programName);
+
 void tokenPreHook(void);
 void yyerror(const char *error);
 void nextLine(void);

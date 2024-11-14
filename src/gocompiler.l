@@ -393,7 +393,7 @@ void yyerror(const char *error) {
 	printf(ERROR_FORMAT("%s: %s"), syntaxPos.line, syntaxPos.column, error, yytext);
 }
 
-void usage(const char *programName) {
+void usage(const char *const programName) {
 	if (programName == NULL) {
 		exit(EXIT_FAILURE);
 	}

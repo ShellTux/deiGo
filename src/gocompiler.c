@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void printCategory(const enum Category category) {
   char *categoryS = NULL;
