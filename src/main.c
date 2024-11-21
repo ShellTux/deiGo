@@ -15,7 +15,11 @@ void usage(const char *const programName) {
     exit(EXIT_FAILURE);
   }
 
-  fprintf(stderr, "Usage: %s\n", programName);
+  fprintf(stderr, "Usage: %s [options]\n", programName);
+  fprintf(stderr, "Options:\n");
+  fprintf(stderr, "  -l, --lexer     Print Lex tokens\n");
+  fprintf(stderr, "  -t, --parser    Print the AST tree\n");
+  fprintf(stderr, "  -h, --help      Print this usage information\n");
   exit(EXIT_FAILURE);
 }
 
@@ -28,7 +32,9 @@ int main(int argc, char **argv) {
     }
 
     debugMode |= Lexer * ((strcmp("-l", arg) == 0) ? 1 : 0);
+    debugMode |= Lexer * ((strcmp("--lexer", arg) == 0) ? 1 : 0);
     debugMode |= Parser * ((strcmp("-t", arg) == 0) ? 1 : 0);
+    debugMode |= Parser * ((strcmp("--parser", arg) == 0) ? 1 : 0);
   }
 
 #ifdef AST_DEMO
