@@ -3,6 +3,7 @@ FLEX  = flex
 BISON = bison
 
 BISON_FLAGS += --warnings=error=all
+# BISON_FLAGS += --warnings=error=conflicts-rr,error=conflicts-sr,error=counterexamples,error=dangling-alias,error=deprecated,error=everything,error=midrule-values,error=none,error=other,error=precedence,error=yacc
 BISON_FLAGS += --verbose
 BISON_FLAGS += --color=always
 
