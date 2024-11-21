@@ -142,7 +142,7 @@ Declarations: VarDeclaration SEMICOLON Declarations {
         addNodes($$, $3);
         debugSyntaxRule("Declarations -> FuncDeclaration SEMICOLON Declarations", NULL, $$);
     }
-    | /* epsilon */  %empty { $$ = createNodeList(NULL); debugSyntaxRule("Declarations -> ε", NULL, $$); }
+    | /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("Declarations -> ε", NULL, $$); }
 ;
 
 VarDeclaration: VAR IDENTIFIER VarSpecs Type {
@@ -167,7 +167,7 @@ VarSpecs: COMMA IDENTIFIER VarSpecs {
         addNodes($$, $3);
         debugSyntaxRule("VarSpecs -> COMMA IDENTIFIER VarSpecs", NULL, $$);
     }
-    | /* epsilon */  %empty { $$ = createNodeList(NULL); debugSyntaxRule("VarSpecs -> ε", NULL, $$); }
+    | /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("VarSpecs -> ε", NULL, $$); }
 ;
 
 Type: INT     { $$ = createNode(Int,     NULL); debugSyntaxRule("Type -> INT",     $$, NULL); }
@@ -212,7 +212,7 @@ FuncParams: ParamDecl FuncParamsList {
         addChilds($$, $2);
         debugSyntaxRule("FuncParams -> ParamDecl FuncParamsList", $$, NULL);
     }
-    | /* epsilon */  %empty { $$ = createNode(FuncParams, NULL); debugSyntaxRule("FuncParams -> ε", $$, NULL); }
+    | /* ϵ */ %empty { $$ = createNode(FuncParams, NULL); debugSyntaxRule("FuncParams -> ε", $$, NULL); }
 ;
 
 FuncParamsList: COMMA ParamDecl FuncParamsList {
@@ -220,7 +220,7 @@ FuncParamsList: COMMA ParamDecl FuncParamsList {
         addNodes($$, $3);
         debugSyntaxRule("FuncParamsList -> COMMA ParamDecl FuncParamsList", NULL, $$);
     }
-    | /* epsilon */  %empty { $$ = createNodeList(NULL); debugSyntaxRule("FuncParamsList -> ε", NULL, $$); }
+    | /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("FuncParamsList -> ε", NULL, $$); }
 ;
 
 ParamDecl: IDENTIFIER Type {
@@ -231,7 +231,7 @@ ParamDecl: IDENTIFIER Type {
     }
 ;
 
-VarsAndStatements: /* epsilon */  %empty { $$ = createNodeList(NULL); debugSyntaxRule("VarsAndStatements -> ε", NULL, $$); }
+VarsAndStatements: /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("VarsAndStatements -> ε", NULL, $$); }
     | VarDeclaration SEMICOLON VarsAndStatements {
         $$ = createNodeList($1);
         addNodes($$, $3);
@@ -326,7 +326,7 @@ ExprList: ExprList COMMA Expr {
         addNodes($$, $1);
         debugSyntaxRule("ExprList -> ExprList COMMA Expr", NULL, $$);
     }
-    | /* epsilon */  %empty { $$ = createNodeList(NULL); debugSyntaxRule("ExprList -> ε", NULL, $$); }
+    | /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("ExprList -> ε", NULL, $$); }
 ;
 
 Expr: Expr OR Expr {
@@ -445,7 +445,7 @@ StatementList: Statement SEMICOLON StatementList {
         addNodes($$, $3);
         debugSyntaxRule("StatementList -> Statement SEMICOLON StatementList", NULL, $$);
     }
-    | /* epsilon */  %empty { $$ = createNodeList(NULL); debugSyntaxRule("StatementList -> ε", NULL, $$); }
+    | /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("StatementList -> ε", NULL, $$); }
 ;
 
 %%
