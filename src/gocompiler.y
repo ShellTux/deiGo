@@ -27,16 +27,14 @@
 	#include <stdbool.h>
         #include <string.h>
 
-	#include "gocompiler.h"
-
-        int yylex(void);
+        #include "gocompiler.h"
+        #include "parser.h"
 
 	void debugSyntaxRule(const char *rule, const struct Node *node, const struct NodeList *list);
 
-	enum DebugMode debugMode = None;
-	int syntaxErrors = 0;
-	struct Node *program = NULL;
-	extern int errors;
+	extern enum DebugMode debugMode;
+	extern struct Errors errors;
+	extern struct Node *program;
 %}
 
 %union {
@@ -295,7 +293,7 @@ Statement: IDENTIFIER ASSIGN Expr {
     | FuncInvocation         { $$ = $1;                       debugSyntaxRule("Statement -> FuncInvocation", $$, NULL); }
     | ParseArgs              { $$ = $1;                       debugSyntaxRule("Statement -> ParseArgs", $$, NULL); }
     | PRINT LPAR STRLIT RPAR { $$ = createNode(StrLit, $3);   debugSyntaxRule("Statement -> PRINT LPAR STRLIT RPAR", $$, NULL); }
-    | error                  { syntaxErrors++; }
+    | error                  { errors.syntax++; }
 ;
 
 
@@ -320,7 +318,7 @@ FuncInvocation: IDENTIFIER LPAR RPAR {
         addChilds($$, $4);
         debugSyntaxRule("IDENTIFIER LPAR Expr ExprList RPAR", $$, NULL);
     }
-    | IDENTIFIER LPAR error RPAR { syntaxErrors++; }
+    | IDENTIFIER LPAR error RPAR { errors.syntax++; }
 ;
 
 ExprList: ExprList COMMA Expr {
@@ -429,7 +427,7 @@ Expr: Expr OR Expr {
     | IDENTIFIER      { $$ = createNode(Identifier, $1); debugSyntaxRule("Expr -> IDENTIFIER", $$, NULL); }
     | FuncInvocation  { $$ = $1;                         debugSyntaxRule("Expr -> FuncInvocation", $$, NULL); }
     | LPAR Expr RPAR  { $$ = $2;                         debugSyntaxRule("Expr -> LPAR Expr RPAR", $$, NULL); }
-    | LPAR error RPAR { $$ = NULL; syntaxErrors++; }
+    | LPAR error RPAR { $$ = NULL; errors.syntax++; }
 ;
 
 BlockProduction: LBRACE StatementList RBRACE {
@@ -468,62 +466,5 @@ void debugSyntaxRule(const char *rule, const struct Node *node, const struct Nod
 
 	printf("\n");
 #endif
-}
-
-int main(int argc, char **argv) {
-	for (int i = 1; i < argc; ++i) {
-		const char *arg = argv[i];
-
-		if (strcmp("-h", arg) == 0 || strcmp("--help", arg) == 0) {
-			usage(argv[0]);
-		}
-
-		debugMode |= Lexer * ((strcmp("-l", arg) == 0) ? 1 : 0);
-		debugMode |= Parser * ((strcmp("-t", arg) == 0) ? 1 : 0);
-	}
-
-#ifdef AST_DEMO
-	// Program
-	// ..FuncDecl
-	// ....FuncHeader                            |
-	// ......Identifier(main)    | Parameters    | Func
-	// ......FuncParams          |               |
-	// ......Identifier(main)    | Parameters2   |
-	// ......FuncParams          |               |
-	// ....FuncBody                              |
-	program = createNode(Program, NULL);
-	struct Node *funcDecl = addChild(program, createNode(FuncDecl, NULL));
-
-	struct NodeList *func = NULL;
-	struct Node *funcHeader = addNode(&func, createNode(FuncHeader, NULL));
-	addNode(&func, createNode(FuncBody, NULL));
-
-	addChilds(funcDecl, func);
-
-	struct NodeList *params = NULL;
-	addNode(&params, createNode(Identifier, "main"));
-	addNode(&params, createNode(FuncParams, NULL));
-
-	struct NodeList *params2 = NULL;
-	addNode(&params2, createNode(Identifier, "main"));
-	addNode(&params2, createNode(FuncParams, NULL));
-
-	addNodes(&params, params2);
-
-	addChilds(funcHeader, params);
-
-
-	printNode(program, 0);
-#else
-#ifdef DEBUG
-	yydebug = 1;
-#endif
-	yyparse();
-
-	if ((debugMode & Parser) && (errors <= 0) && (syntaxErrors <= 0)) {
-		printNode(program, 0);
-	}
-#endif
-	return 0;
 }
 // vim: expandtab:shiftwidth=4:softtabstop=4:smartindent

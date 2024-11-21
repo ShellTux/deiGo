@@ -22,3 +22,26 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
+#ifndef INCLUDE_INCLUDE_SEMANTICS_H_
+#define INCLUDE_INCLUDE_SEMANTICS_H_
+
+#include "parser.h"
+
+struct SymbolList {
+  char *identifier;
+  enum Category type;
+  struct Node *node;
+  struct SymbolList *next;
+};
+
+int checkProgram(struct SymbolList *symbol_table, struct Node *program);
+struct SymbolList *createSymbolTable(const struct Node *node);
+struct SymbolList *insertSymbol(struct SymbolList *list, const char *identifier,
+                                const enum Category type,
+                                const struct Node *node);
+struct SymbolList *searchSymbol(const struct SymbolList *list,
+                                const char *const identifier);
+void showSymbolTable(struct SymbolList *list);
+int checkFunction(struct SymbolList *symbolTable, struct Node *function);
+
+#endif // INCLUDE_INCLUDE_SEMANTICS_H_

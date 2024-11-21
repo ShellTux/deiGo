@@ -30,30 +30,24 @@
     #include <string.h>
 
     #include "gocompiler.h"
+    #include "lexer.h"
     #include "y.tab.h"
+
+    extern bool isValidString;
+    extern enum DebugMode debugMode;
+    extern struct Errors errors;
+    extern LexerToken lastToken;
+    extern struct String string;
+
+    extern struct Pos lexerPos;
+    extern struct Pos statePos;
+    extern struct Pos syntaxPos;
 
     #define ERROR_FORMAT(MESSAGE) "Line %d, column %d: " MESSAGE "\n"
     #define PRINT_ERROR(FORMAT, ...) printf(ERROR_FORMAT(FORMAT), __VA_ARGS__)
     #define YY_USER_ACTION tokenPreHook();
     #define PASS_TOKEN() { yylval.string = strdup(yytext); }
 
-    bool isValidString = false;
-    struct String string = {0};
-    LexerToken lastToken = L_OTHER;
-    int errors = 0;
-    extern enum DebugMode debugMode;
-
-    struct Pos lexerPos = {
-    	.line = 1,
-	.column = 1,
-    };
-
-    struct Pos statePos = {
-    	.line = -1,
-	.column = -1,
-    };
-
-    struct Pos syntaxPos;
 %}
 
 digit			[0-9]
@@ -253,154 +247,24 @@ int yywrap() {  /* called on EOF, return 1 to terminate */
 }
 
 void tokenPreHook() { /* called before every catched token */
-	syntaxPos.line = lexerPos.line;
-	syntaxPos.column = lexerPos.column;
+  syntaxPos.line = lexerPos.line;
+  syntaxPos.column = lexerPos.column;
 
-	lexerPos.column += yyleng;
+  lexerPos.column += yyleng;
 }
 
 void nextLine(void) {
-	lexerPos.line++;
-	lexerPos.column = 1;
-}
-
-void printLex(const char *token, const char *_string) {
-	(void) _string;
-
-	if (token == NULL) {
-		return;
-	}
-
-	printf("%s\n", token);
-}
-
-void printLexF(const char *format, const char *string) {
-	if (format == NULL || *format == '\0' || string == NULL || *string == '\0') {
-		return;
-	}
-
-	printf(format, string);
-	printf("\n");
-}
-
-void printToken(const LexerToken token) {
-	if (!(debugMode & Lexer)) {
-		return;
-	}
-
-	// HACK: Fix
-	if (token == L_STRLIT) {
-		printf("STRLIT(\"%s\")\n", string.buffer);
-		return;
-	}
-
-	char *format = NULL;
-	char *string = NULL;
-
-	PrintLexFunction printF = NULL;
-	switch (token) {
-#define TOKEN(NAME, STRING) \
-		case NAME: \
-			   format = STRING; \
-		printF = printLex; \
-		break;
-		TOKENS_WITHOUT_FORMAT
-#undef TOKEN
-#define TOKEN(NAME, FORMAT) \
-		case NAME: \
-			   format = FORMAT; \
-			string = yytext; \
-			printF = printLexF; \
-			break;
-			TOKENS_WITH_FORMAT
-#undef TOKEN
-		default:
-			printf("Invalid Token\n");
-			break;
-	}
-
-	printF(format, string);
-}
-
-void printLastToken(void) {
-	printToken(lastToken);
-}
-
-bool checkLastToken(void) {
-	switch (lastToken) {
-		case L_NATURAL:
-		case L_DECIMAL:
-		case L_STRLIT:
-		case L_IDENTIFIER:
-		case L_RETURN:
-		case L_RPAR:
-		case L_RSQ:
-		case L_RBRACE:
-			printToken(L_SEMICOLON);
-			return true;
-			break;
-		default:
-			break;
-	}
-
-	return false;
-}
-
-void stringAppend(struct String *dest, const char *src) {
-	if (dest == NULL || src == NULL) {
-		return;
-	}
-
-	const size_t srcLength = strlen(src);
-
-	if (dest->length + srcLength + 1 > dest->capacity) {
-		if (dest->capacity == 0) {
-			dest->capacity = 1;
-		}
-
-		while (dest->length + srcLength + 1 > dest->capacity) {
-			dest->capacity *= 2;
-		}
-
-		const bool clean = dest->buffer == NULL;
-		dest->buffer =
-			realloc(dest->buffer, dest->capacity * sizeof(dest->buffer[0]));
-
-		if (clean) {
-			*dest->buffer = '\0';
-		}
-	}
-
-	strcat(dest->buffer, src);
-	dest->length += srcLength;
-}
-
-void stringDestroy(struct String *string) {
-  if (string == NULL) {
-    return;
-  }
-
-  if (string->buffer != NULL) {
-	  free(string->buffer);
-  }
-  *string = (struct String){0};
+  lexerPos.line++;
+  lexerPos.column = 1;
 }
 
 void yyerror(const char *error) {
-	errors++;
+	errors.lexer++;
 
 	if (!(debugMode & Parser) && strcmp("syntax error", error) == 0) {
+		errors.syntax++;
 		return;
 	}
 
 	printf(ERROR_FORMAT("%s: %s"), syntaxPos.line, syntaxPos.column, error, yytext);
-}
-
-void usage(const char *const programName) {
-	if (programName == NULL) {
-		exit(EXIT_FAILURE);
-	}
-
-	fprintf(stderr, "Usage: %s\n", programName);
-	exit(EXIT_FAILURE);
 }

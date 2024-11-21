@@ -24,7 +24,9 @@ COMPILER = bin/deigoc
 COMPILER_SRC = \
 	       $(LEX_OUTPUT) \
 	       $(YACC_OUTPUT) \
-	       src/gocompiler.c
+	       src/gocompiler.c \
+	       src/main.c \
+	       src/lexer.c src/parser.c src/semantics.c
 COMPILER_ZIP = gocompiler.zip
 
 all: $(COMPILER)
@@ -41,7 +43,7 @@ $(YACC_OUTPUT) $(YACC_HEADER): $(YACC_SRC)
 	mkdir --parents "$(shell dirname "$@")"
 	$(BISON) $(BISON_FLAGS) --report-file=$(REPORT_FILE) --header=$(YACC_HEADER) --output=$(YACC_OUTPUT) --debug $^
 
-$(COMPILER_ZIP): include/gocompiler.h src/gocompiler.c src/gocompiler.l src/gocompiler.y
+$(COMPILER_ZIP): include/*.h src/*.[cyl]
 	rm --force $@
 	zip --junk-paths $@ $^
 
