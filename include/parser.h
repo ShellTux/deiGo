@@ -25,6 +25,7 @@
 #ifndef INCLUDE_INCLUDE_PARSER_H_
 #define INCLUDE_INCLUDE_PARSER_H_
 
+#include "gocompiler.h"
 #include <stdbool.h>
 
 #define TOKEN_ROOT CATEGORY(Program)
@@ -95,6 +96,23 @@ enum Category {
 
 void printCategory(const enum Category category);
 
+#define IDENTIFIER_TYPES                                                       \
+  IDENTIFIER(TypeNone)                                                         \
+  IDENTIFIER(TypeI32)                                                          \
+  IDENTIFIER(TypeF32)                                                          \
+  IDENTIFIER(TypeBool)                                                         \
+  IDENTIFIER(TypeString)
+
+enum IdentifierType {
+#define IDENTIFIER(ENUM) ENUM,
+  IDENTIFIER_TYPES
+#undef IDENTIFIER
+};
+
+enum IdentifierType Category2IdentifierType(const enum Category category);
+
+void printIdentifierType(const enum IdentifierType type);
+
 /**
  * @struct Node
  * Represents a node in a tree-like structure.
@@ -114,6 +132,7 @@ struct Node {
   enum Category tokenType;
   char *tokenValue;
   struct NodeList *children;
+  enum IdentifierType identifierType;
 };
 
 /**
@@ -244,5 +263,7 @@ void printNode(const struct Node *node, const int depth);
  * @param depth An integer representing the depth level for indentation.
  */
 void printNodeList(const struct NodeList *nodeList, const int depth);
+
+struct Node *getChild(struct Node *parent, int position);
 
 #endif // INCLUDE_INCLUDE_PARSER_H_

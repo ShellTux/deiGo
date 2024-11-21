@@ -29,19 +29,30 @@
 
 struct SymbolList {
   char *identifier;
-  enum Category type;
+  enum IdentifierType type;
   struct Node *node;
   struct SymbolList *next;
+  struct SymbolList *scope;
 };
 
-int checkProgram(struct SymbolList *symbol_table, struct Node *program);
 struct SymbolList *createSymbolTable(const struct Node *node);
 struct SymbolList *insertSymbol(struct SymbolList *list, const char *identifier,
-                                const enum Category type,
+                                const enum IdentifierType type,
                                 const struct Node *node);
 struct SymbolList *searchSymbol(const struct SymbolList *list,
                                 const char *const identifier);
 void showSymbolTable(struct SymbolList *list);
-int checkFunction(struct SymbolList *symbolTable, struct Node *function);
+void showSymbolTableFuncDecl(struct SymbolList *list);
+void showSymbolTableVarDecl(struct SymbolList *list);
+
+int checkProgram(struct Node *program);
+int checkFuncDecl(struct SymbolList *symbolTable, struct Node *funcDecl);
+int checkFuncBody(struct SymbolList *symbolTable, struct Node *funcBody);
+int checkVarDecl(struct SymbolList *symbolTable, struct Node *varDecl);
+int checkParams(struct SymbolList *symbolTable, struct Node *params);
+int checkStatements(struct SymbolList *symbolTable, struct Node *params);
+int checkExpressions(struct SymbolList *symbolTable, struct Node *params);
+
+struct SymbolList *checkScope(struct SymbolList *table);
 
 #endif // INCLUDE_INCLUDE_SEMANTICS_H_

@@ -58,7 +58,8 @@ struct Errors {
 #define DEBUG_MODES                                                            \
   DEBUG_MODE(None, 0, "", "", "")                                              \
   DEBUG_MODE(Lexer, 1 << 0, "-l", "--lexer", "Print Lex tokens")               \
-  DEBUG_MODE(Parser, 1 << 1, "-t", "--parser", "Print the AST tree")
+  DEBUG_MODE(Parser, 1 << 1, "-t", "--parser", "Print the AST tree")           \
+  DEBUG_MODE(Semantic, 1 << 2, "-s", "--semantic", "Print The Symbol Table")
 
 enum DebugMode : u64 {
 #define DEBUG_MODE(ENUM, VALUE, SHORT_OPTION, LONG_OPTION, DESCRIPTION)        \

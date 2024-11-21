@@ -9,6 +9,7 @@
 enum DebugMode debugMode = None;
 struct Node *program = NULL;
 struct Errors errors = {0};
+extern struct SymbolList *globalSymbolTable;
 
 int main(int argc, char **argv) {
   for (int i = 1; i < argc; ++i) {
@@ -134,17 +135,28 @@ int main(int argc, char **argv) {
       }
     }
   }
-
-  printNode(program, 0);
 #else
 #ifdef DEBUG
   yydebug = 1;
 #endif
   yyparse();
+#endif
 
-  if ((debugMode & Parser) && errors.lexer + errors.syntax <= 0) {
+  if (errors.lexer + errors.syntax > 0) {
+    return 1;
+  }
+
+  if (debugMode & Parser) {
+    showSymbolTable(globalSymbolTable);
+    printNode(program, 0);
+  } else if (debugMode & Semantic) {
+    if (checkProgram(program) > 0) {
+      return 1;
+    }
+
+    showSymbolTable(globalSymbolTable);
     printNode(program, 0);
   }
-#endif
+
   return 0;
 }

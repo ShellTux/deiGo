@@ -30,6 +30,34 @@
 #include <stdlib.h>
 #include <string.h>
 
+enum IdentifierType Category2IdentifierType(const enum Category category) {
+  switch (category) {
+  case Int:
+    return TypeI32;
+  case Float32:
+    return TypeF32;
+  case Bool:
+    return TypeBool;
+  case String:
+    return TypeString;
+  default:
+    break;
+  }
+
+  return TypeNone;
+}
+
+void printIdentifierType(const enum IdentifierType type) {
+  switch (type) {
+#define IDENTIFIER(ENUM)                                                       \
+  case ENUM: {                                                                 \
+    printf("%s", #ENUM);                                                       \
+  } break;
+    IDENTIFIER_TYPES
+#undef IDENTIFIER
+  }
+}
+
 void printCategory(const enum Category category) {
   char *categoryS = NULL;
   switch (category) {
@@ -50,6 +78,7 @@ struct Node *createNode(const enum Category tokenType, const char *tokenValue) {
       .tokenType = tokenType,
       .tokenValue = tokenValue == NULL ? NULL : strdup(tokenValue),
       .children = NULL,
+      .identifierType = TypeNone,
   };
   return node;
 }
@@ -191,4 +220,15 @@ void printNodeList(const struct NodeList *nodeList, const int depth) {
 
   printNode(nodeList->node, depth + 1);
   printNodeList(nodeList->next, depth + 1);
+}
+
+struct Node *getChild(struct Node *parent, int position) {
+  for (struct NodeList *child = parent->children; child != NULL;
+       child = child->next) {
+    if (position-- == 0) {
+      return child->node;
+    }
+  }
+
+  return NULL;
 }
