@@ -10,31 +10,30 @@ enum DebugMode debugMode = None;
 struct Node *program = NULL;
 struct Errors errors = {0};
 
-void usage(const char *const programName) {
-  if (programName == NULL) {
-    exit(EXIT_FAILURE);
-  }
-
-  fprintf(stderr, "Usage: %s [options]\n", programName);
-  fprintf(stderr, "Options:\n");
-  fprintf(stderr, "  -l, --lexer     Print Lex tokens\n");
-  fprintf(stderr, "  -t, --parser    Print the AST tree\n");
-  fprintf(stderr, "  -h, --help      Print this usage information\n");
-  exit(EXIT_FAILURE);
-}
-
 int main(int argc, char **argv) {
   for (int i = 1; i < argc; ++i) {
     const char *arg = argv[i];
 
     if (strcmp("-h", arg) == 0 || strcmp("--help", arg) == 0) {
-      usage(argv[0]);
+      fprintf(stderr, "Usage: %s [options]\n", argv[0]);
+      fprintf(stderr, "Options:\n");
+      fprintf(stderr, "  -h, --help\t    Print this usage information\n");
+#define DEBUG_MODE(ENUM, VALUE, SHORT_OPTION, LONG_OPTION, DESCRIPTION)        \
+  if (ENUM != None)                                                            \
+    fprintf(stderr,                                                            \
+            "  " SHORT_OPTION ", " LONG_OPTION "\t    " DESCRIPTION "\n");
+      DEBUG_MODES
+#undef DEBUG_MODE
+      exit(EXIT_FAILURE);
     }
 
-    debugMode |= Lexer * ((strcmp("-l", arg) == 0) ? 1 : 0);
-    debugMode |= Lexer * ((strcmp("--lexer", arg) == 0) ? 1 : 0);
-    debugMode |= Parser * ((strcmp("-t", arg) == 0) ? 1 : 0);
-    debugMode |= Parser * ((strcmp("--parser", arg) == 0) ? 1 : 0);
+#define DEBUG_MODE(ENUM, VALUE, SHORT_OPTION, LONG_OPTION, DESCRIPTION)        \
+  debugMode |=                                                                 \
+      ENUM * (strcmp(SHORT_OPTION, arg) == 0 || strcmp(LONG_OPTION, arg) == 0  \
+                  ? 1                                                          \
+                  : 0);
+    DEBUG_MODES
+#undef DEBUG_MODE
   }
 
 #ifdef AST_DEMO

@@ -29,7 +29,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void usage(const char *const programName);
 int main(int argc, char **argv);
 
 int yylex(void);
@@ -56,10 +55,16 @@ struct Errors {
   int semantic;
 };
 
+#define DEBUG_MODES                                                            \
+  DEBUG_MODE(None, 0, "", "", "")                                              \
+  DEBUG_MODE(Lexer, 1 << 0, "-l", "--lexer", "Print Lex tokens")               \
+  DEBUG_MODE(Parser, 1 << 1, "-t", "--parser", "Print the AST tree")
+
 enum DebugMode : u64 {
-  None = 0,
-  Lexer = 1 << 0,
-  Parser = 1 << 1,
+#define DEBUG_MODE(ENUM, VALUE, SHORT_OPTION, LONG_OPTION, DESCRIPTION)        \
+  ENUM = VALUE,
+  DEBUG_MODES
+#undef DEBUG_MODE
 };
 
 #endif // INCLUDE_INCLUDE_GOCOMPILER_H_
