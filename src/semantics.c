@@ -319,7 +319,7 @@ int checkFuncBody(struct SymbolList *scopeTable, struct Node *funcBody) {
     case Or:
     case Plus:
     case Sub: {
-      semanticErrors += checkExpressions(scopeTable, node);
+      semanticErrors += checkExpression(scopeTable, node);
     } break;
     default:
       break;
@@ -340,7 +340,7 @@ int checkStatements(struct SymbolList *scopeTable, struct Node *statements) {
     }
   } break;
   case If: {
-    semanticErrors += checkExpressions(scopeTable, getChild(statements, 0));
+    semanticErrors += checkExpression(scopeTable, getChild(statements, 0));
     semanticErrors += checkStatements(scopeTable, getChild(statements, 1));
     semanticErrors += checkStatements(scopeTable, getChild(statements, 2));
   } break;
@@ -348,20 +348,20 @@ int checkStatements(struct SymbolList *scopeTable, struct Node *statements) {
     break;
   case Return:
   case Print: {
-    semanticErrors += checkExpressions(scopeTable, getChild(statements, 0));
+    semanticErrors += checkExpression(scopeTable, getChild(statements, 0));
   } break;
   case ParseArgs: {
     struct Node *node1 = getChild(statements, 0);
     struct Node *node2 = getChild(statements, 1);
-    semanticErrors += checkExpressions(scopeTable, node1);
-    semanticErrors += checkExpressions(scopeTable, node2);
+    semanticErrors += checkExpression(scopeTable, node1);
+    semanticErrors += checkExpression(scopeTable, node2);
     statements->identifierType =
         (node1->identifierType == node2->identifierType) ? node1->identifierType
                                                          : TypeNone;
   } break;
   case Assign: {
-    semanticErrors += checkExpressions(scopeTable, getChild(statements, 0));
-    semanticErrors += checkExpressions(scopeTable, getChild(statements, 1));
+    semanticErrors += checkExpression(scopeTable, getChild(statements, 0));
+    semanticErrors += checkExpression(scopeTable, getChild(statements, 1));
   } break;
   default:
     break;
@@ -370,20 +370,20 @@ int checkStatements(struct SymbolList *scopeTable, struct Node *statements) {
   return semanticErrors;
 }
 
-int checkExpressions(struct SymbolList *scopeTable, struct Node *expressions) {
+int checkExpression(struct SymbolList *scopeTable, struct Node *expression) {
   (void)scopeTable;
 
-  switch (expressions->tokenType) {
+  switch (expression->tokenType) {
   case Natural:
-    expressions->identifierType = TypeI32;
+    expression->identifierType = TypeI32;
     break;
   case Decimal:
-    expressions->identifierType = TypeF32;
+    expression->identifierType = TypeF32;
     break;
   case Identifier: {
   } break;
   case StrLit:
-    expressions->identifierType = TypeString;
+    expression->identifierType = TypeString;
     break;
   default:
     break;
