@@ -24,6 +24,7 @@
  ***************************************************************************/
 #include "semantics.h"
 #include "parser.h"
+#include "stdbool.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -108,11 +109,28 @@ static void showFunction(struct SymbolList *symbol, const struct Node *node) {
        scopeTable = scopeTable->next) {
     printf("%s\t\t", scopeTable->identifier);
     printIdentifierType(scopeTable->type);
-    printf((1 || is_parameter(scopeTable->node, node) == 1) ? "\tparam\n"
-                                                            : "\n");
+    printf(isParam(scopeTable->node, node) ? "\tparam\n" : "\n");
   }
 
   printf("\n");
+}
+
+bool isParam(const struct Node *param, const struct Node *function) {
+  struct Node *header = getChild((struct Node *)function, 0);
+  struct Node *params = getChild(header, 1);
+
+  if (params->tokenType != FuncParams) {
+    params = getChild(header, 2);
+  }
+
+  for (struct NodeList *child = params->children; child != NULL;
+       child = child->next) {
+    if (child->node == param) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void showSymbolTable(struct SymbolList *symbolTable) {
@@ -152,12 +170,14 @@ void showSymbolTable(struct SymbolList *symbolTable) {
 }
 
 void showSymbolTableFuncDecl(struct SymbolList *symbolTable) {
+  return;
   printf("===== Function %s(", symbolTable->identifier);
   printParams(symbolTable->node);
   printf(") Symbol Table =====\n");
 }
 
 void showSymbolTableVarDecl(struct SymbolList *symbolTable) {
+  return;
   printf("===== Function %s(", symbolTable->identifier);
   printIdentifierType(symbolTable->type);
   printf(") Symbol Table =====\n");
@@ -176,12 +196,12 @@ int checkProgram(struct Node *program) {
 
     struct Node *node = child->node;
     switch (node->tokenType) {
-    case VarDecl:
+    case VarDecl: {
       semanticErrors += checkVarDecl(globalSymbolTable, node);
-      break;
-    case FuncDecl:
+    } break;
+    case FuncDecl: {
       semanticErrors += checkFuncDecl(globalSymbolTable, node);
-      break;
+    } break;
     default:
       break;
     }
@@ -191,6 +211,8 @@ int checkProgram(struct Node *program) {
 }
 
 int checkVarDecl(struct SymbolList *scope, struct Node *var) {
+  return 0;
+
   struct Node *id = getChild(var, 1);
   enum IdentifierType type =
       Category2IdentifierType(getChild(var, 0)->tokenType);
@@ -236,7 +258,7 @@ int checkFuncDecl(struct SymbolList *symbolTable, struct Node *function) {
 }
 
 struct SymbolList *checkScope(struct SymbolList *table) {
-  if (table == NULL) {
+  if (table == NULL || table->scope != NULL) {
     return NULL;
   }
 
@@ -268,18 +290,18 @@ int checkFuncBody(struct SymbolList *scopeTable, struct Node *funcBody) {
        child = child->next) {
     struct Node *node = child->node;
     switch (node->tokenType) {
-    case VarDecl:
+    case VarDecl: {
       semanticErrors += checkVarDecl(scopeTable, node);
-      break;
+    } break;
     case Block:
     case Call:
     case For:
     case If:
     case ParseArgs:
     case Print:
-    case Return:
+    case Return: {
       semanticErrors += checkStatements(scopeTable, node);
-      break;
+    } break;
     case Add:
     case And:
     case Assign:
@@ -296,9 +318,9 @@ int checkFuncBody(struct SymbolList *scopeTable, struct Node *funcBody) {
     case Not:
     case Or:
     case Plus:
-    case Sub:
+    case Sub: {
       semanticErrors += checkExpressions(scopeTable, node);
-      break;
+    } break;
     default:
       break;
     }
@@ -324,9 +346,7 @@ int checkStatements(struct SymbolList *scopeTable, struct Node *statements) {
   } break;
   case For:
     break;
-  case Return: {
-    semanticErrors += checkExpressions(scopeTable, getChild(statements, 0));
-  } break;
+  case Return:
   case Print: {
     semanticErrors += checkExpressions(scopeTable, getChild(statements, 0));
   } break;

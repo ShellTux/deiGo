@@ -27,6 +27,8 @@
 
 #include "parser.h"
 
+#include <stdbool.h>
+
 struct SymbolList {
   char *identifier;
   enum IdentifierType type;
@@ -52,6 +54,8 @@ int checkVarDecl(struct SymbolList *symbolTable, struct Node *varDecl);
 int checkParams(struct SymbolList *symbolTable, struct Node *params);
 int checkStatements(struct SymbolList *symbolTable, struct Node *params);
 int checkExpressions(struct SymbolList *symbolTable, struct Node *params);
+
+bool isParam(const struct Node *param, const struct Node *function);
 
 struct SymbolList *checkScope(struct SymbolList *table);
 

@@ -61,7 +61,7 @@ struct Errors {
   DEBUG_MODE(Parser, 1 << 1, "-t", "--parser", "Print the AST tree")           \
   DEBUG_MODE(Semantic, 1 << 2, "-s", "--semantic", "Print The Symbol Table")
 
-enum DebugMode : u64 {
+enum DebugMode {
 #define DEBUG_MODE(ENUM, VALUE, SHORT_OPTION, LONG_OPTION, DESCRIPTION)        \
   ENUM = VALUE,
   DEBUG_MODES
