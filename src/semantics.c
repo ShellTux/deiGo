@@ -250,9 +250,7 @@ int checkFuncDecl(struct SymbolList *symbolTable, struct Node *function) {
   struct SymbolList *functionScope = checkScope(newSymbol);
 
   semanticErrors += checkParams(functionScope, parameters);
-
-  struct Node *functionBody = getChild(function, 1);
-  semanticErrors += checkFuncBody(functionScope, functionBody);
+  semanticErrors += checkFuncBody(functionScope, getChild(function, 1));
 
   return semanticErrors;
 }

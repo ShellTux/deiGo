@@ -52,7 +52,7 @@ int checkFuncDecl(struct SymbolList *symbolTable, struct Node *funcDecl);
 int checkFuncBody(struct SymbolList *symbolTable, struct Node *funcBody);
 int checkVarDecl(struct SymbolList *symbolTable, struct Node *varDecl);
 int checkParams(struct SymbolList *symbolTable, struct Node *params);
-int checkStatements(struct SymbolList *symbolTable, struct Node *params);
+int checkStatements(struct SymbolList *symbolTable, struct Node *statements);
 int checkExpression(struct SymbolList *symbolTable, struct Node *expression);
 
 bool isParam(const struct Node *param, const struct Node *function);
