@@ -434,8 +434,7 @@ void errorSymbol(const enum SymbolErrorType errorType,
   FILE *outFile = stderr;
 #endif
 
-  // TODO: Line and column numbers
-  fprintf(outFile, "Line %d, column %d: ", -1, -1);
+  fprintf(outFile, "Line %d, column %d: ", node->pos.line, node->pos.column);
 
   switch (errorType) {
   case SYMBOL_ALREADY_DEFINED_ERROR: {

@@ -131,6 +131,7 @@ void printIdentifierType(const enum IdentifierType type);
 struct Node {
   enum Category tokenType;
   char *tokenValue;
+  struct Pos pos;
   struct NodeList *children;
   enum IdentifierType identifierType;
 };

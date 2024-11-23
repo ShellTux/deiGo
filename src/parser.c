@@ -23,12 +23,15 @@
  *
  ***************************************************************************/
 #include "parser.h"
+#include "gocompiler.h"
 #include "stdbool.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+extern struct Pos syntaxPos;
 
 enum IdentifierType Category2IdentifierType(const enum Category category) {
   switch (category) {
@@ -77,6 +80,7 @@ struct Node *createNode(const enum Category tokenType, const char *tokenValue) {
   *node = (struct Node){
       .tokenType = tokenType,
       .tokenValue = tokenValue == NULL ? NULL : strdup(tokenValue),
+      .pos = syntaxPos,
       .children = NULL,
       .identifierType = TypeNone,
   };
