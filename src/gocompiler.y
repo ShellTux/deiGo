@@ -292,7 +292,11 @@ Statement: IDENTIFIER ASSIGN Expr {
     | RETURN                 { $$ = createNode(Return, NULL); debugSyntaxRule("Statement -> RETURN", $$, NULL); }
     | FuncInvocation         { $$ = $1;                       debugSyntaxRule("Statement -> FuncInvocation", $$, NULL); }
     | ParseArgs              { $$ = $1;                       debugSyntaxRule("Statement -> ParseArgs", $$, NULL); }
-    | PRINT LPAR STRLIT RPAR { $$ = createNode(StrLit, $3);   debugSyntaxRule("Statement -> PRINT LPAR STRLIT RPAR", $$, NULL); }
+    | PRINT LPAR STRLIT RPAR {
+        $$ = createNode(Print, NULL);
+        addChild($$, createNode(StrLit, $3));
+        debugSyntaxRule("Statement -> PRINT LPAR STRLIT RPAR", $$, NULL);
+    }
     | error                  { errors.syntax++; }
 ;
 
