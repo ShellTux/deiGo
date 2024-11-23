@@ -441,8 +441,10 @@ void errorSymbol(const enum SymbolErrorType errorType,
     fprintf(outFile, "Symbol %s already defined", node->tokenValue);
   } break;
   case SYMBOL_CANNOT_FIND_ERROR: {
+    fprintf(outFile, "Cannot find symbol %s", node->tokenValue);
   } break;
   case SYMBOL_UNUSED_ERROR: {
+    fprintf(outFile, "Symbol %s declared but never used", node->tokenValue);
   } break;
   case SYMBOL_COERCION_ERROR: {
   } break;
