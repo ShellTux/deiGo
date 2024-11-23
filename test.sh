@@ -56,7 +56,7 @@ usage() {
 color=auto
 compiler=./bin/deigoc
 fail_on_first=false
-flags='lt'
+flags='lts'
 metas=1,2,3
 summary=false
 temp_file=/tmp/deigo-temp
