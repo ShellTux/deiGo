@@ -59,4 +59,13 @@ bool isParam(const struct Node *param, const struct Node *function);
 
 struct SymbolList *checkScope(struct SymbolList *table);
 
+enum SymbolErrorType {
+  SYMBOL_ALREADY_DEFINED_ERROR,
+  SYMBOL_CANNOT_FIND_ERROR,
+  SYMBOL_UNUSED_ERROR,
+  SYMBOL_COERCION_ERROR,
+};
+
+void errorSymbol(const enum SymbolErrorType errorType, const struct Node *node);
+
 #endif // INCLUDE_INCLUDE_SEMANTICS_H_

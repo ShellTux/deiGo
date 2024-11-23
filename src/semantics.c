@@ -23,6 +23,7 @@
  *
  ***************************************************************************/
 #include "semantics.h"
+#include "gocompiler.h"
 #include "parser.h"
 #include "stdbool.h"
 
@@ -33,6 +34,7 @@
 #include <string.h>
 
 struct SymbolList *globalSymbolTable = NULL;
+extern struct Errors errors;
 
 struct SymbolList *insertSymbol(struct SymbolList *table,
                                 const char *identifier,
@@ -211,14 +213,12 @@ int checkProgram(struct Node *program) {
   return semanticErrors;
 }
 
-int checkVarDecl(struct SymbolList *scope, struct Node *var) {
-  return 0;
-
-  struct Node *id = getChild(var, 1);
+int checkVarDecl(struct SymbolList *scope, struct Node *varDecl) {
+  struct Node *id = getChild(varDecl, 1);
   enum IdentifierType type =
-      Category2IdentifierType(getChild(var, 0)->tokenType);
-  if (insertSymbol(scope, id->tokenValue, type, var) == NULL) {
-    printf("Error: identifier already declared: %s\n", id->tokenValue);
+      Category2IdentifierType(getChild(varDecl, 0)->tokenType);
+  if (insertSymbol(scope, id->tokenValue, type, varDecl) == NULL) {
+    errorSymbol(SYMBOL_ALREADY_DEFINED_ERROR, id);
     return 1;
   }
 
@@ -244,7 +244,7 @@ int checkFuncDecl(struct SymbolList *symbolTable, struct Node *function) {
       insertSymbol(symbolTable, id->tokenValue, type, function);
 
   if (newSymbol == NULL) {
-    printf("Error: identifier already declared: %s\n", id->tokenValue);
+    errorSymbol(SYMBOL_ALREADY_DEFINED_ERROR, id);
     return 1;
   }
 
@@ -420,4 +420,34 @@ struct SymbolList *createSymbolTable(const struct Node *node) {
   }
 
   return NULL;
+}
+
+void errorSymbol(const enum SymbolErrorType errorType,
+                 const struct Node *node) {
+  if (node == NULL) {
+    return;
+  }
+
+#ifndef RELEASE
+  FILE *outFile = stdout;
+#else
+  FILE *outFile = stderr;
+#endif
+
+  // TODO: Line and column numbers
+  fprintf(outFile, "Line %d, column %d: ", -1, -1);
+
+  switch (errorType) {
+  case SYMBOL_ALREADY_DEFINED_ERROR: {
+    fprintf(outFile, "Symbol %s already defined", node->tokenValue);
+  } break;
+  case SYMBOL_CANNOT_FIND_ERROR: {
+  } break;
+  case SYMBOL_UNUSED_ERROR: {
+  } break;
+  case SYMBOL_COERCION_ERROR: {
+  } break;
+  }
+
+  fprintf(outFile, "\n");
 }
