@@ -267,3 +267,4 @@ void yyerror(const char *error) {
 
 	printf(ERROR_FORMAT("%s: %s"), syntaxPos.line, syntaxPos.column, error, yytext);
 }
+// vim: expandtab:shiftwidth=4:softtabstop=4:smartindent
