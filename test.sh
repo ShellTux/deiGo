@@ -206,9 +206,10 @@ unit_test() {
 finish() {
 	! $summary && echo
 
+	printf 'Total tests done: %d\n' "$((passed + failed))"
+
 	if [ "$passed" -gt 0 ]
 	then
-		printf 'Total tests done: %d\n' "$((passed + failed))"
 		color_text 32 'PASSED:'
 		printf ' %d\n' "$passed"
 		for t in $passed_tests
