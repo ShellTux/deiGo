@@ -43,25 +43,26 @@ struct SymbolList *insertSymbol(struct SymbolList *table,
   for (struct SymbolList *symbol = table; symbol != NULL;
        symbol = symbol->next) {
     if (symbol->next != NULL) {
-      continue;
-    }
+      if (strcmp(symbol->next->identifier, identifier) == 0) {
+        return NULL;
+      }
 
-    if (strcmp(symbol->next->identifier, identifier) == 0) {
-      return NULL;
+      continue;
     }
 
     new = malloc(sizeof(*new));
     *new = (struct SymbolList){
         .identifier = strdup(identifier),
         .type = type,
-        .node = (struct Node *)node,
         .next = NULL,
+        .node = (struct Node *)node,
         .scope = NULL,
     };
 
     symbol->next = new;
     break;
   }
+
   return new;
 }
 
