@@ -247,8 +247,7 @@ int yywrap() {  /* called on EOF, return 1 to terminate */
 }
 
 void tokenPreHook() { /* called before every catched token */
-  syntaxPos.line = lexerPos.line;
-  syntaxPos.column = lexerPos.column;
+  syntaxPos = lexerPos;
 
   lexerPos.column += yyleng;
 }
