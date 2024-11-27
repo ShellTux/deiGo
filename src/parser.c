@@ -50,11 +50,36 @@ enum IdentifierType Category2IdentifierType(const enum Category category) {
   return TypeNone;
 }
 
+char *identifierTypeS(const enum IdentifierType type) {
+  switch (type) {
+#define IDENTIFIER(ENUM, STR)                                                  \
+  case ENUM: {                                                                 \
+    return STR;                                                                \
+  }
+    break;
+    IDENTIFIER_TYPES
+#undef IDENTIFIER
+  }
+
+  return NULL;
+}
+
 void printIdentifierType(const enum IdentifierType type) {
   switch (type) {
-#define IDENTIFIER(ENUM)                                                       \
+#define IDENTIFIER(ENUM, STR)                                                  \
   case ENUM: {                                                                 \
     printf("%s", #ENUM);                                                       \
+  } break;
+    IDENTIFIER_TYPES
+#undef IDENTIFIER
+  }
+}
+
+void printType(const enum IdentifierType type) {
+  switch (type) {
+#define IDENTIFIER(ENUM, STR)                                                  \
+  case ENUM: {                                                                 \
+    printf("%s", STR);                                                         \
   } break;
     IDENTIFIER_TYPES
 #undef IDENTIFIER

@@ -97,21 +97,23 @@ enum Category {
 void printCategory(const enum Category category);
 
 #define IDENTIFIER_TYPES                                                       \
-  IDENTIFIER(TypeNone)                                                         \
-  IDENTIFIER(TypeI32)                                                          \
-  IDENTIFIER(TypeF32)                                                          \
-  IDENTIFIER(TypeBool)                                                         \
-  IDENTIFIER(TypeString)
+  IDENTIFIER(TypeNone, "none")                                                 \
+  IDENTIFIER(TypeI32, "int")                                                   \
+  IDENTIFIER(TypeF32, "float")                                                 \
+  IDENTIFIER(TypeBool, "bool")                                                 \
+  IDENTIFIER(TypeString, "str")
 
 enum IdentifierType {
-#define IDENTIFIER(ENUM) ENUM,
+#define IDENTIFIER(ENUM, STR) ENUM,
   IDENTIFIER_TYPES
 #undef IDENTIFIER
 };
 
 enum IdentifierType Category2IdentifierType(const enum Category category);
 
+char *identifierTypeS(const enum IdentifierType type);
 void printIdentifierType(const enum IdentifierType type);
+void printType(const enum IdentifierType type);
 
 /**
  * @struct Node
