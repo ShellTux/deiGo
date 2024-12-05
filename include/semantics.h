@@ -37,6 +37,8 @@ struct SymbolList {
   struct SymbolList *scope;
 };
 
+void printSymbolList(const struct SymbolList *symbolList, const int depth);
+
 struct SymbolList *createSymbolTable(const struct Node *node);
 struct SymbolList *insertSymbol(struct SymbolList *list, const char *identifier,
                                 const enum IdentifierType type,
@@ -55,6 +57,7 @@ int checkParams(struct SymbolList *symbolTable, struct Node *params);
 int checkStatements(struct SymbolList *symbolTable, struct Node *statements);
 int checkExpression(struct SymbolList *symbolTable, struct Node *expression);
 
+char *getParamsS(const struct Node *node);
 bool isParam(const struct Node *param, const struct Node *function);
 
 struct SymbolList *checkScope(struct SymbolList *table);

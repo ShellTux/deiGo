@@ -94,6 +94,7 @@ enum Category {
 #undef CATEGORY
 };
 
+char *categoryS(const enum Category category);
 void printCategory(const enum Category category);
 
 #define IDENTIFIER_TYPES                                                       \
@@ -267,6 +268,6 @@ void printNode(const struct Node *node, const int depth);
  */
 void printNodeList(const struct NodeList *nodeList, const int depth);
 
-struct Node *getChild(struct Node *parent, int position);
+struct Node *getChild(const struct Node *parent, int position);
 
 #endif // INCLUDE_INCLUDE_PARSER_H_

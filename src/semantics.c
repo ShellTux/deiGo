@@ -23,6 +23,7 @@
  *
  ***************************************************************************/
 #include "semantics.h"
+#include "debug.h"
 #include "gocompiler.h"
 #include "parser.h"
 #include "stdbool.h"
@@ -33,8 +34,34 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define STRING_MAX 4096
+static char tempString[STRING_MAX + 1] = "";
+
 struct SymbolList *globalSymbolTable = NULL;
 extern struct Errors errors;
+
+void printSymbolList(const struct SymbolList *symbolList, const int depth) {
+  if (symbolList == NULL) {
+    return;
+  }
+
+#define PRINT_IDENTATION                                                       \
+  for (int i = 0; i < depth; ++i) {                                            \
+    printf("  ");                                                              \
+  }
+
+  PRINT_IDENTATION;
+
+  printf("{identifier: %s, type: %s, node: %p, next: %p, scope: %p}\n",
+         symbolList->identifier, identifierTypeS(symbolList->type),
+         symbolList->node, symbolList->next, symbolList->scope);
+
+  /*printSymbolList(symbolList->scope, depth);*/
+
+  printSymbolList(symbolList->next, depth + 1);
+
+#undef PRINT_IDENTATION
+}
 
 struct SymbolList *insertSymbol(struct SymbolList *table,
                                 const char *identifier,
@@ -83,39 +110,29 @@ struct SymbolList *searchSymbol(const struct SymbolList *list,
   return NULL;
 }
 
-static void printParams(const struct Node *node) {
-  struct Node *funcHeader = getChild((struct Node *)node, 0);
-  struct Node *funcParams = getChild((struct Node *)funcHeader, 1);
-  if (funcParams->tokenType != FuncParams) {
-    funcParams = getChild(funcHeader, 2);
+char *getParamsS(const struct Node *node) {
+  if (node == NULL) {
+    return "";
   }
 
-  for (struct NodeList *children = funcParams->children; children != NULL;
+  *tempString = '\0';
+
+  const struct Node *funcHeader = getChild(node, 0);
+  const struct Node *parameters = getChild(funcHeader, 1);
+  if (parameters->tokenType != FuncParams) {
+    parameters = getChild(funcHeader, 2);
+  }
+
+  for (struct NodeList *children = parameters->children; children != NULL;
        children = children->next) {
-    printIdentifierType(Category2IdentifierType(children->node->tokenType));
+    strcat(tempString, identifierTypeS(children->node->identifierType));
+
     if (children->next != NULL) {
-      printf(", ");
+      strcat(tempString, ",");
     }
   }
-}
 
-static void showFunction(struct SymbolList *symbol, const struct Node *node) {
-  printf("===== Function %s(", symbol->identifier);
-  printParams(symbol->node);
-  printf(") Symbol Table =====\n");
-
-  printf("return\t\t");
-  printIdentifierType(symbol->type);
-  printf("\n");
-
-  for (struct SymbolList *scopeTable = symbol->scope; scopeTable != NULL;
-       scopeTable = scopeTable->next) {
-    printf("%s\t\t", scopeTable->identifier);
-    printIdentifierType(scopeTable->type);
-    printf(isParam(scopeTable->node, node) ? "\tparam\n" : "\n");
-  }
-
-  printf("\n");
+  return tempString;
 }
 
 bool isParam(const struct Node *param, const struct Node *function) {
@@ -145,45 +162,61 @@ void showSymbolTable(struct SymbolList *symbolTable) {
 
   for (struct SymbolList *symbol = symbolTable->next; symbol != NULL;
        symbol = symbol->next) {
-    const struct Node *node = symbol->node;
+    printf("%s\t(%s)\t%s\n", symbol->identifier, getParamsS(symbol->node),
+           identifierTypeS(symbol->type));
+  }
 
+  printf("\n");
+
+  for (struct SymbolList *symbol = symbolTable->next; symbol != NULL;
+       symbol = symbol->next) {
+    const struct Node *node = symbol->node;
     switch (node->tokenType) {
-    case FuncDecl: {
-      showSymbolTableFuncDecl(symbol);
-    } break;
     case VarDecl: {
       showSymbolTableVarDecl(symbol);
+    } break;
+    case FuncDecl: {
+      showSymbolTableFuncDecl(symbol);
     } break;
     default:
       break;
     }
   }
-
-  printf("\n");
-
-  for (struct SymbolList *symbol = globalSymbolTable->next; symbol != NULL;
-       symbol = symbol->next) {
-    const struct Node *node = symbol->node;
-    if (node->tokenType != FuncDecl) {
-      continue;
-    }
-
-    showFunction(symbol, node);
-  }
 }
 
 void showSymbolTableFuncDecl(struct SymbolList *symbolTable) {
-  return;
-  printf("===== Function %s(", symbolTable->identifier);
-  printParams(symbolTable->node);
-  printf(") Symbol Table =====\n");
+  if (symbolTable == NULL) {
+    return;
+  }
+
+  const struct Node *node = symbolTable->node;
+
+  if (node == NULL || node->tokenType != FuncDecl) {
+    DEBUG_PRINT("node->tokenType = %s", categoryS(node->tokenType));
+    return;
+  }
+
+  printf("===== Function %s(%s) Symbol Table =====\n", symbolTable->identifier,
+         getParamsS(NULL));
+  printf("return\t\t%s\n", identifierTypeS(symbolTable->type));
+  showSymbolTableVarDecl(symbolTable->scope);
+  printf("\n");
 }
 
 void showSymbolTableVarDecl(struct SymbolList *symbolTable) {
-  return;
-  printf("===== Function %s(", symbolTable->identifier);
-  printIdentifierType(symbolTable->type);
-  printf(") Symbol Table =====\n");
+  if (symbolTable == NULL) {
+    return;
+  }
+
+  for (struct SymbolList *symbol = symbolTable; symbol != NULL;
+       symbol = symbol->next) {
+    const struct Node *node = symbol->node;
+    if (node == NULL) {
+      continue;
+    }
+
+    printCategory(node->tokenType);
+  }
 }
 
 int checkProgram(struct Node *program) {
@@ -257,14 +290,22 @@ int checkFuncDecl(struct SymbolList *symbolTable, struct Node *function) {
 }
 
 struct SymbolList *checkScope(struct SymbolList *table) {
+  // TODO: Implement Scope
   if (table == NULL || table->scope != NULL) {
     return NULL;
   }
 
-  return table->scope = malloc(sizeof(*table->scope));
+  table->scope = malloc(sizeof(*table->scope));
+  *table->scope = (struct SymbolList){0};
+
+  return table->scope;
 }
 
 int checkParams(struct SymbolList *scopeTable, struct Node *params) {
+  if (scopeTable == NULL || params == NULL) {
+    return 0;
+  }
+
   int position = 0;
   for (struct Node *param = getChild(params, position); param != NULL;
        param = getChild(params, ++position)) {

@@ -86,18 +86,20 @@ void printType(const enum IdentifierType type) {
   }
 }
 
-void printCategory(const enum Category category) {
-  char *categoryS = NULL;
+char *categoryS(const enum Category category) {
   switch (category) {
 #define CATEGORY(ENUM)                                                         \
-  case ENUM: {                                                                 \
-    categoryS = #ENUM;                                                         \
-  } break;
+  case ENUM:                                                                   \
+    return #ENUM;
     CATEGORIES
 #undef CATEGORY
   }
 
-  printf("%s", categoryS);
+  return NULL;
+}
+
+void printCategory(const enum Category category) {
+  printf("%s", categoryS(category));
 }
 
 struct Node *createNode(const enum Category tokenType, const char *tokenValue) {
@@ -251,7 +253,7 @@ void printNodeList(const struct NodeList *nodeList, const int depth) {
   printNodeList(nodeList->next, depth + 1);
 }
 
-struct Node *getChild(struct Node *parent, int position) {
+struct Node *getChild(const struct Node *parent, int position) {
   for (struct NodeList *child = parent->children; child != NULL;
        child = child->next) {
     if (position-- == 0) {
