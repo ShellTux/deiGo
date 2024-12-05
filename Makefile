@@ -20,6 +20,7 @@ CFLAGS += -Wno-unused-function
 CFLAGS += -Wno-implicit-function-declaration
 CFLAGS += -I$(shell realpath include)
 CFLAGS += -I$(shell realpath bin)
+CFLAGS += -ggdb
 
 COMPILER = bin/deigoc
 COMPILER_SRC = \
