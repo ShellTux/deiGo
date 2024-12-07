@@ -119,6 +119,7 @@ char *getParamsS(const struct Node *node) {
 
   const struct Node *funcHeader = getChild(node, 0);
   const struct Node *parameters = getChild(funcHeader, 1);
+  assert(parameters != NULL && "parameters == NULL");
   if (parameters->tokenType != FuncParams) {
     parameters = getChild(funcHeader, 2);
   }
@@ -136,10 +137,14 @@ char *getParamsS(const struct Node *node) {
 }
 
 bool isParam(const struct Node *param, const struct Node *function) {
-  struct Node *header = getChild((struct Node *)function, 0);
+  if (param == NULL || function == NULL) {
+    return false;
+  }
+
+  struct Node *header = getChild(function, 0);
   struct Node *params = getChild(header, 1);
 
-  if (params->tokenType != FuncParams) {
+  if (params != NULL && params->tokenType != FuncParams) {
     params = getChild(header, 2);
   }
 
@@ -197,9 +202,15 @@ void showSymbolTableFuncDecl(struct SymbolList *symbolTable) {
   }
 
   printf("===== Function %s(%s) Symbol Table =====\n", symbolTable->identifier,
-         getParamsS(NULL));
+         getParamsS(symbolTable->node));
   printf("return\t\t%s\n", identifierTypeS(symbolTable->type));
-  showSymbolTableVarDecl(symbolTable->scope);
+
+  for (struct SymbolList *scope = symbolTable->scope->next; scope != NULL;
+       scope = scope->next) {
+    printf("%s\t\t%s%s\n", scope->identifier, identifierTypeS(scope->type),
+           isParam(scope->node, node) ? "\tparam" : "");
+  }
+
   printf("\n");
 }
 
@@ -215,12 +226,18 @@ void showSymbolTableVarDecl(struct SymbolList *symbolTable) {
       continue;
     }
 
-    printCategory(node->tokenType);
+    printf("%s\t\t%s%s\n", node->tokenValue,
+           identifierTypeS(node->identifierType),
+           isParam(NULL, NULL) ? "\tparam" : "");
   }
 }
 
 int checkProgram(struct Node *program) {
   int semanticErrors = 0;
+
+  if (program == NULL) {
+    return semanticErrors;
+  }
 
   if (globalSymbolTable == NULL) {
     globalSymbolTable = malloc(sizeof(*globalSymbolTable));
@@ -247,6 +264,9 @@ int checkProgram(struct Node *program) {
 }
 
 int checkVarDecl(struct SymbolList *scope, struct Node *varDecl) {
+  assert(scope != NULL && "Scope == NULL");
+  assert(varDecl != NULL && "Scope == NULL");
+
   struct Node *id = getChild(varDecl, 1);
   enum IdentifierType type =
       Category2IdentifierType(getChild(varDecl, 0)->tokenType);
@@ -259,6 +279,8 @@ int checkVarDecl(struct SymbolList *scope, struct Node *varDecl) {
 }
 
 int checkFuncDecl(struct SymbolList *symbolTable, struct Node *function) {
+  assert(symbolTable != NULL && "symbolTable == NULL");
+  assert(function != NULL && "function == NULL");
   int semanticErrors = 0;
 
   struct Node *funcHeader = getChild(function, 0);
@@ -324,6 +346,8 @@ int checkParams(struct SymbolList *scopeTable, struct Node *params) {
 }
 
 int checkFuncBody(struct SymbolList *scopeTable, struct Node *funcBody) {
+  assert(scopeTable != NULL && "scopeTable == NULL");
+  assert(funcBody != NULL && "funcBody == NULL");
   int semanticErrors = 0;
 
   for (struct NodeList *child = funcBody->children; child != NULL;

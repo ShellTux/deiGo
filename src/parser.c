@@ -254,6 +254,10 @@ void printNodeList(const struct NodeList *nodeList, const int depth) {
 }
 
 struct Node *getChild(const struct Node *parent, int position) {
+  if (parent == NULL) {
+    return NULL;
+  }
+
   for (struct NodeList *child = parent->children; child != NULL;
        child = child->next) {
     if (position-- == 0) {
