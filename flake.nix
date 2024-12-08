@@ -28,6 +28,7 @@
 		    conan
 		    cppcheck
 		    doxygen
+		    entr
 		    flex
 		    gtest
 		    lcov
