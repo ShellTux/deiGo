@@ -56,8 +56,8 @@ usage() {
 color=auto
 compiler=./bin/deigoc
 fail_on_first=false
-flags='lts'
-metas=1,2,3
+flags='-l,-t,-s,'
+metas=1,2,3,4
 summary=false
 temp_file=/tmp/deigo-temp
 test_dir=./tests
@@ -180,7 +180,8 @@ diff_posix() {
 		fi
 	done
 
-	"$compiler" -"$flag" < "$1" > "$temp_file"
+	# shellcheck disable=SC2086
+	"$compiler" $flag < "$1" > "$temp_file"
 
 	# shellcheck disable=SC2086
 	command diff $diff_args "$temp_file" "$2"
@@ -235,13 +236,13 @@ finish() {
 
 flag=
 
-for meta in $(seq 1 3)
+for meta in $(seq 1 4)
 do
 	echo "$metas" | grep --quiet "$meta" || continue
 	test_meta_dir="$test_dir/meta$meta"
 	[ ! -d "$test_meta_dir" ] && continue
 
-	flag="$(echo "$flags" | cut --characters="$meta")"
+	flag="$(echo "$flags" | cut --delimiter=',' --fields="$meta")"
 
 	for t in $(find "$test_meta_dir" -type f -printf '%f\n' \
 		| grep --only-matching '^[^\.]\+\.dgo' \
