@@ -230,7 +230,7 @@ void printNode(const struct Node *node, const int depth) {
 
   printCategory(node->tokenType);
   if (node->tokenValue != NULL) {
-    printf("(%s)", node->tokenValue);
+    printf(node->tokenType == StrLit ? "(\"%s\")" : "(%s)", node->tokenValue);
   }
   printf("\n");
 
