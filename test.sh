@@ -56,10 +56,11 @@ usage() {
 color=auto
 compiler=./bin/deigoc
 fail_on_first=false
+flags='lts'
 metas=1,2,3
+summary=false
 temp_file=/tmp/deigo-temp
 test_dir=./tests
-summary=false
 
 passed=0
 passed_tests=
@@ -179,7 +180,7 @@ diff_posix() {
 		fi
 	done
 
-	"$compiler" -l < "$1" > "$temp_file"
+	"$compiler" -"$flag" < "$1" > "$temp_file"
 
 	# shellcheck disable=SC2086
 	command diff $diff_args "$temp_file" "$2"
@@ -205,9 +206,10 @@ unit_test() {
 finish() {
 	! $summary && echo
 
+	printf 'Total tests done: %d\n' "$((passed + failed))"
+
 	if [ "$passed" -gt 0 ]
 	then
-		printf 'Total tests done: %d\n' "$((passed + failed))"
 		color_text 32 'PASSED:'
 		printf ' %d\n' "$passed"
 		for t in $passed_tests
@@ -231,11 +233,15 @@ finish() {
 	fi
 }
 
+flag=
+
 for meta in $(seq 1 3)
 do
 	echo "$metas" | grep --quiet "$meta" || continue
 	test_meta_dir="$test_dir/meta$meta"
 	[ ! -d "$test_meta_dir" ] && continue
+
+	flag="$(echo "$flags" | cut --characters="$meta")"
 
 	for t in $(find "$test_meta_dir" -type f -printf '%f\n' \
 		| grep --only-matching '^[^\.]\+\.dgo' \
