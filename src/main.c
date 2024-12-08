@@ -1,3 +1,4 @@
+#include "codegen.h"
 #include "gocompiler.h"
 #include "parser.h"
 #include "semantics.h"
@@ -150,14 +151,24 @@ int main(int argc, char **argv) {
   if (debugMode & Parser) {
     showSymbolTable(globalSymbolTable);
     printNode(program, 0);
-  } else if (debugMode & Semantic) {
+    return 0;
+  }
+
+  if (debugMode & Semantic) {
     if (checkProgram(program) > 0) {
       return 1;
     }
 
     showSymbolTable(globalSymbolTable);
     printNode(program, 0);
+    return 0;
   }
+
+  if (checkProgram(program) > 0) {
+    return 1;
+  }
+
+  codegen_program(program);
 
   return 0;
 }

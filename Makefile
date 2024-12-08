@@ -28,7 +28,7 @@ COMPILER_SRC = \
 	       $(YACC_OUTPUT) \
 	       src/gocompiler.c \
 	       src/main.c \
-	       src/lexer.c src/parser.c src/semantics.c
+	       src/lexer.c src/parser.c src/semantics.c src/codegen.c
 COMPILER_ZIP = gocompiler.zip
 
 all: $(COMPILER)
