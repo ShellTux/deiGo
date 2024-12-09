@@ -27,7 +27,7 @@
 
 #include "parser.h"
 
-void codegen_program(const struct Node *program);
-int codegen_expression(const struct Node *expression);
+void codegenProgram(const struct Node *const program);
+int codegenExpression(const struct Node *const expression);
 
 #endif // INCLUDE_INCLUDE_CODEGEN_H_

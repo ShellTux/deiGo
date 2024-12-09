@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  codegen_program(program);
+  codegenProgram(program);
 
   return 0;
 }

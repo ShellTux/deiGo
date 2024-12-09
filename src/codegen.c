@@ -37,26 +37,27 @@ static int temporary;
 
 extern struct SymbolList *globalSymbolTable;
 
-static int codegen_natural(const struct Node *natural) {
+static int codegenNatural(const struct Node *const natural) {
   printf("  %%%d = add i32 %s, 0\n", temporary, natural->tokenValue);
   return temporary++;
 }
 
-int codegen_expression(const struct Node *expression) {
+int codegenExpression(const struct Node *const expression) {
   assert(expression != NULL && "expression == NULL");
 
   int tmp = -1;
   switch (expression->tokenType) {
   case Natural:
-    tmp = codegen_natural(expression);
+    tmp = codegenNatural(expression);
     break;
   default:
     break;
   }
+
   return tmp;
 }
 
-void codegen_parameters(const struct Node *parameters) {
+void codegenParams(const struct Node *const parameters) {
   int curr = 0;
   for (struct Node *parameter = getChild(parameters, curr); parameter != NULL;
        parameter = getChild(parameters, ++curr)) {
@@ -68,18 +69,17 @@ void codegen_parameters(const struct Node *parameters) {
   }
 }
 
-void codegen_function(const struct Node *function) {
+void codegenFunction(const struct Node *const function) {
   temporary = 1;
   printf("define i32 @_%s(", getChild(function, 0)->tokenValue);
-  codegen_parameters(getChild(function, 1));
+  codegenParams(getChild(function, 1));
   printf(") {\n");
-  int tmp = codegen_expression(getChild(function, 2));
-  printf("  ret i32 %%%d\n", tmp);
+  int tmp = codegenExpression(getChild(function, 2));
   printf("}\n\n");
 }
 
 // code generation begins here, with the AST root node
-void codegen_program(const struct Node *program) {
+void codegenProgram(const struct Node *const program) {
   // predeclared I/O functions
   printf("declare i32 @_read(i32)\n");
   printf("declare i32 @_write(i32)\n\n");
@@ -87,7 +87,7 @@ void codegen_program(const struct Node *program) {
   // generate code for each function
   for (struct NodeList *function = program->children; function != NULL;
        function = function->next) {
-    codegen_function(function->node);
+    codegenFunction(function->node);
   }
 
   // generate the entry point which calls main(integer) if it exists
