@@ -22,14 +22,15 @@ CFLAGS += -I$(shell realpath include)
 CFLAGS += -I$(shell realpath bin)
 CFLAGS += -ggdb
 
-COMPILER = bin/deigoc
-COMPILER_SRC = \
+COMPILER      = bin/deigoc
+COMPILER_SRC  = \
 	       $(LEX_OUTPUT) \
 	       $(YACC_OUTPUT) \
 	       src/gocompiler.c \
 	       src/main.c \
 	       src/lexer.c src/parser.c src/semantics.c src/codegen.c
-COMPILER_ZIP = gocompiler.zip
+COMPILER_SRC := $(COMPILER_SRC:.c=.o)
+COMPILER_ZIP  = gocompiler.zip
 
 all: $(COMPILER)
 
