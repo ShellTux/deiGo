@@ -36,9 +36,10 @@
 static int temporary;
 
 extern struct SymbolList *globalSymbolTable;
+extern FILE *outFile;
 
 static int codegenNatural(const struct Node *const natural) {
-  printf("  %%%d = add i32 %s, 0\n", temporary, natural->tokenValue);
+  fprintf(outFile, "  %%%d = add i32 %s, 0\n", temporary, natural->tokenValue);
   return temporary++;
 }
 
@@ -62,40 +63,39 @@ void codegenParams(const struct Node *const parameters) {
   for (struct Node *parameter = getChild(parameters, curr); parameter != NULL;
        parameter = getChild(parameters, ++curr)) {
     if (curr > 1) {
-      printf(", ");
+      fprintf(outFile, ", ");
     }
 
-    printf("i32 %%%s", getChild(parameter, 1)->tokenValue);
+    fprintf(outFile, "i32 %%%s", getChild(parameter, 1)->tokenValue);
   }
 }
 
 void codegenFunction(const struct Node *const function) {
   temporary = 1;
-  printf("define i32 @_%s(", getChild(function, 0)->tokenValue);
+  fprintf(outFile, "define i32 @_%s(", getChild(function, 0)->tokenValue);
   codegenParams(getChild(function, 1));
-  printf(") {\n");
+  fprintf(outFile, ") {\n");
   int tmp = codegenExpression(getChild(function, 2));
-  printf("}\n\n");
+  fprintf(outFile, "  ret i32 %%%d\n", tmp);
+  fprintf(outFile, "}\n\n");
 }
 
-// code generation begins here, with the AST root node
 void codegenProgram(const struct Node *const program) {
-  // predeclared I/O functions
-  printf("declare i32 @_read(i32)\n");
-  printf("declare i32 @_write(i32)\n\n");
+  fprintf(outFile, "declare i32 @_read(i32)\n");
+  fprintf(outFile, "declare i32 @_write(i32)\n\n");
 
-  // generate code for each function
   for (struct NodeList *function = program->children; function != NULL;
        function = function->next) {
     codegenFunction(function->node);
   }
 
   // generate the entry point which calls main(integer) if it exists
-  struct SymbolList *entry = NULL; // searchSymbol(globalSymbolTable, "main");
+  struct SymbolList *const entry =
+      NULL; // searchSymbol(globalSymbolTable, "main");
   if (entry != NULL && entry->node->tokenType == FuncDecl) {
-    printf("define i32 @main() {\n"
-           "  %%1 = call i32 @_main(i32 0)\n"
-           "  ret i32 %%1\n"
-           "}\n");
+    fprintf(outFile, "define i32 @main() {\n"
+                     "  %%1 = call i32 @_main(i32 0)\n"
+                     "  ret i32 %%1\n"
+                     "}\n");
   }
 }

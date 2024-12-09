@@ -12,8 +12,11 @@ enum DebugMode debugMode = None;
 struct Node *program = NULL;
 struct Errors errors = {0};
 extern struct SymbolList *globalSymbolTable;
+FILE *outFile = NULL;
 
 int main(int argc, char **argv) {
+  outFile = stdout;
+
   for (int i = 1; i < argc; ++i) {
     const char *arg = argv[i];
 

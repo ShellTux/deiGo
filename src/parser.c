@@ -32,6 +32,7 @@
 #include <string.h>
 
 extern struct Pos syntaxPos;
+extern FILE *outFile;
 
 enum IdentifierType Category2IdentifierType(const enum Category category) {
   switch (category) {
@@ -68,7 +69,7 @@ void printIdentifierType(const enum IdentifierType type) {
   switch (type) {
 #define IDENTIFIER(ENUM, STR)                                                  \
   case ENUM: {                                                                 \
-    printf("%s", #ENUM);                                                       \
+    fprintf(outFile, "%s", #ENUM);                                             \
   } break;
     IDENTIFIER_TYPES
 #undef IDENTIFIER
@@ -79,7 +80,7 @@ void printType(const enum IdentifierType type) {
   switch (type) {
 #define IDENTIFIER(ENUM, STR)                                                  \
   case ENUM: {                                                                 \
-    printf("%s", STR);                                                         \
+    fprintf(outFile, "%s", STR);                                               \
   } break;
     IDENTIFIER_TYPES
 #undef IDENTIFIER
@@ -99,7 +100,7 @@ char *categoryS(const enum Category category) {
 }
 
 void printCategory(const enum Category category) {
-  printf("%s", categoryS(category));
+  fprintf(outFile, "%s", categoryS(category));
 }
 
 struct Node *createNode(const enum Category tokenType, const char *tokenValue) {
@@ -225,14 +226,15 @@ void printNode(const struct Node *node, const int depth) {
   }
 
   for (int i = 0; i < depth; ++i) {
-    printf("..");
+    fprintf(outFile, "..");
   }
 
   printCategory(node->tokenType);
   if (node->tokenValue != NULL) {
-    printf(node->tokenType == StrLit ? "(\"%s\")" : "(%s)", node->tokenValue);
+    fprintf(outFile, node->tokenType == StrLit ? "(\"%s\")" : "(%s)",
+            node->tokenValue);
   }
-  printf("\n");
+  fprintf(outFile, "\n");
 
 #if 0
   printNodeList(node->children, depth);

@@ -38,7 +38,9 @@
 static char tempString[STRING_MAX + 1] = "";
 
 struct SymbolList *globalSymbolTable = NULL;
+
 extern struct Errors errors;
+extern FILE *outFile;
 
 void printSymbolList(const struct SymbolList *symbolList, const int depth) {
   if (symbolList == NULL) {
@@ -47,14 +49,15 @@ void printSymbolList(const struct SymbolList *symbolList, const int depth) {
 
 #define PRINT_IDENTATION                                                       \
   for (int i = 0; i < depth; ++i) {                                            \
-    printf("  ");                                                              \
+    fprintf(outFile, "  ");                                                    \
   }
 
   PRINT_IDENTATION;
 
-  printf("{identifier: %s, type: %s, node: %p, next: %p, scope: %p}\n",
-         symbolList->identifier, identifierTypeS(symbolList->type),
-         symbolList->node, symbolList->next, symbolList->scope);
+  fprintf(outFile,
+          "{identifier: %s, type: %s, node: %p, next: %p, scope: %p}\n",
+          symbolList->identifier, identifierTypeS(symbolList->type),
+          symbolList->node, symbolList->next, symbolList->scope);
 
   /*printSymbolList(symbolList->scope, depth);*/
 
@@ -163,15 +166,15 @@ void showSymbolTable(struct SymbolList *symbolTable) {
     return;
   }
 
-  printf("===== Global Symbol Table =====\n");
+  fprintf(outFile, "===== Global Symbol Table =====\n");
 
   for (struct SymbolList *symbol = symbolTable->next; symbol != NULL;
        symbol = symbol->next) {
-    printf("%s\t(%s)\t%s\n", symbol->identifier, getParamsS(symbol->node),
-           identifierTypeS(symbol->type));
+    fprintf(outFile, "%s\t(%s)\t%s\n", symbol->identifier,
+            getParamsS(symbol->node), identifierTypeS(symbol->type));
   }
 
-  printf("\n");
+  fprintf(outFile, "\n");
 
   for (struct SymbolList *symbol = symbolTable->next; symbol != NULL;
        symbol = symbol->next) {
@@ -201,17 +204,18 @@ void showSymbolTableFuncDecl(struct SymbolList *symbolTable) {
     return;
   }
 
-  printf("===== Function %s(%s) Symbol Table =====\n", symbolTable->identifier,
-         getParamsS(symbolTable->node));
-  printf("return\t\t%s\n", identifierTypeS(symbolTable->type));
+  fprintf(outFile, "===== Function %s(%s) Symbol Table =====\n",
+          symbolTable->identifier, getParamsS(symbolTable->node));
+  fprintf(outFile, "return\t\t%s\n", identifierTypeS(symbolTable->type));
 
   for (struct SymbolList *scope = symbolTable->scope->next; scope != NULL;
        scope = scope->next) {
-    printf("%s\t\t%s%s\n", scope->identifier, identifierTypeS(scope->type),
-           isParam(scope->node, node) ? "\tparam" : "");
+    fprintf(outFile, "%s\t\t%s%s\n", scope->identifier,
+            identifierTypeS(scope->type),
+            isParam(scope->node, node) ? "\tparam" : "");
   }
 
-  printf("\n");
+  fprintf(outFile, "\n");
 }
 
 void showSymbolTableVarDecl(struct SymbolList *symbolTable) {
@@ -226,9 +230,9 @@ void showSymbolTableVarDecl(struct SymbolList *symbolTable) {
       continue;
     }
 
-    printf("%s\t\t%s%s\n", node->tokenValue,
-           identifierTypeS(node->identifierType),
-           isParam(NULL, NULL) ? "\tparam" : "");
+    fprintf(outFile, "%s\t\t%s%s\n", node->tokenValue,
+            identifierTypeS(node->identifierType),
+            isParam(NULL, NULL) ? "\tparam" : "");
   }
 }
 
@@ -337,7 +341,8 @@ int checkParams(struct SymbolList *scopeTable, struct Node *params) {
 
     struct Node *id = getChild(param, 1);
     if (insertSymbol(scopeTable, id->tokenValue, type, param) == NULL) {
-      printf("Error: identifier already declared: %s\n", id->tokenValue);
+      fprintf(outFile, "Error: identifier already declared: %s\n",
+              id->tokenValue);
       return 1;
     }
   }
