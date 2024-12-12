@@ -1,6 +1,16 @@
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
 	pattern = "*.y",
-	command = "source yacc.vim",
+	callback = function()
+		vim.cmd [[source yacc.vim]]
+		vim.cmd [[setlocal commentstring=//\ %s]]
+	end,
+})
+
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+	pattern = "*.l",
+	callback = function()
+		vim.cmd [[setlocal commentstring=//\ %s]]
+	end,
 })
 
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
