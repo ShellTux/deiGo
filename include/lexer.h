@@ -28,15 +28,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct String {
-  char *buffer;
-  size_t length;
-  size_t capacity;
-};
-
-void stringAppend(struct String *dest, const char *src);
-void stringDestroy(struct String *string);
-
 void tokenPreHook(void);
 void nextLine(void);
 

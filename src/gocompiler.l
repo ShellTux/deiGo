@@ -31,6 +31,7 @@
 
     #include "gocompiler.h"
     #include "lexer.h"
+    #include "String.h"
     #include "y.tab.h"
 
     extern bool isValidString;

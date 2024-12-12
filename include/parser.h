@@ -100,9 +100,9 @@ void printCategory(const enum Category category);
 #define IDENTIFIER_TYPES                                                       \
   IDENTIFIER(TypeNone, "none")                                                 \
   IDENTIFIER(TypeI32, "int")                                                   \
-  IDENTIFIER(TypeF32, "float")                                                 \
+  IDENTIFIER(TypeF32, "float32")                                               \
   IDENTIFIER(TypeBool, "bool")                                                 \
-  IDENTIFIER(TypeString, "str")
+  IDENTIFIER(TypeString, "string")
 
 enum IdentifierType {
 #define IDENTIFIER(ENUM, STR) ENUM,
