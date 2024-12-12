@@ -35,6 +35,8 @@
 	extern enum DebugMode debugMode;
 	extern struct Errors errors;
 	extern struct Node *program;
+        struct NodeList *listaux = NULL;
+
 %}
 
 %union {
@@ -94,12 +96,14 @@
 %token<string> STRLIT
 
 %type<list> BlockProduction
+%type<list> BlockProduction2
 %type<list> Declarations
 %type<list> ExprList
 %type<list> FuncParamsList
 %type<list> StatementList
 %type<list> VarsAndStatements
 %type<list> VarSpecs
+%type<list> VarDeclaration
 
 %type<node> Expr
 %type<node> FuncBody
@@ -112,7 +116,7 @@
 %type<node> Program
 %type<node> Statement
 %type<node> Type
-%type<node> VarDeclaration
+
 
 %left OR
 %left AND
@@ -133,7 +137,7 @@ Program: PACKAGE IDENTIFIER SEMICOLON Declarations {
 ;
 
 Declarations: VarDeclaration SEMICOLON Declarations {
-        $$ = createNodeList($1);
+        $$ = $1;
         addNodes($$, $3);
         debugSyntaxRule("Declarations -> VarDeclaration SEMICOLON Declarations", NULL, $$);
     }
@@ -146,28 +150,58 @@ Declarations: VarDeclaration SEMICOLON Declarations {
 ;
 
 VarDeclaration: VAR IDENTIFIER VarSpecs Type {
-        $$ = createNode(VarDecl, NULL);
-        addChild($$, $4);
-        addChild($$, createNode(Identifier, $2));
-        addChilds($$, $3);
-        debugSyntaxRule("VarDeclaration -> VAR IDENTIFIER VarSpecs Type", $$, NULL);
+        struct Node *nd = createNode(VarDecl, NULL);
+        addChild(nd, $4);
+        addChild(nd, createNode(Identifier, $2));
+
+        $$ = createNodeList(nd);
+
+        if ($3->node != NULL) {
+            for (struct NodeList *nl = $3; nl != NULL; nl = nl->next) {
+                struct Node *nda = createNode(VarDecl, NULL);
+
+                addChild(nda, $4);
+                addChild(nda, createNode(Identifier, nl->node->tokenValue));
+                addNode($$, nda);
+            }
+        }
     }
+
+
     | VAR LPAR IDENTIFIER VarSpecs Type SEMICOLON RPAR {
-        $$ = createNode(VarDecl, NULL);
-        addChild($$, $5);
-        addChild($$, createNode(Identifier, $3));
-        addChilds($$, $4);
-        debugSyntaxRule("VarDeclaration -> VAR LPAR IDENTIFIER VarSpecs Type SEMICOLON RPAR", $$, NULL);
+
+        struct Node *nd = createNode(VarDecl, NULL);
+        addChild(nd, $5);
+        addChild(nd, createNode(Identifier, $3));
+
+        $$ = createNodeList(nd);
+
+        if ($4 != NULL) {
+          struct NodeList *nl = $4;
+          if (nl->node != NULL) {          
+            while (nl != NULL) {
+              struct Node *nda = createNode(VarDecl, NULL);
+              addChild(nda, $5);
+              addChild(nda, createNode(Identifier, nl->node->tokenValue));
+              addNode($$, nda);
+              nl = nl->next;
+            }
+          }  
+        }
     }
 ;
 
 
 VarSpecs: COMMA IDENTIFIER VarSpecs {
-        $$ = createNodeList(NULL);
-        addNodes($$, $3);
+        $$ = createNodeList(createNode(Identifier, $2)); 
+        addNodes($$, $3); 
         debugSyntaxRule("VarSpecs -> COMMA IDENTIFIER VarSpecs", NULL, $$);
     }
-    | /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("VarSpecs -> ε", NULL, $$); }
+    | IDENTIFIER {
+        $$ = createNodeList(createNode(Identifier, $1)); // Nó único para o identificador
+        debugSyntaxRule("VarSpecs -> IDENTIFIER", NULL, $$);
+    }
+    | /* epsilon */  %empty { $$ = createNodeList(NULL); debugSyntaxRule("VarSpecs -> ε", NULL, $$); }
 ;
 
 Type: INT     { $$ = createNode(Int,     NULL); debugSyntaxRule("Type -> INT",     $$, NULL); }
@@ -200,8 +234,10 @@ FuncHeader: IDENTIFIER LPAR FuncParams RPAR Type {
 ;
 
 FuncBody: LBRACE VarsAndStatements RBRACE {
+
         $$ = createNode(FuncBody, NULL);
         addChilds($$, $2);
+
         debugSyntaxRule("FuncBody -> LBRACE VarsAndStatements RBRACE", $$, NULL);
     }
 ;
@@ -233,7 +269,7 @@ ParamDecl: IDENTIFIER Type {
 
 VarsAndStatements: /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("VarsAndStatements -> ε", NULL, $$); }
     | VarDeclaration SEMICOLON VarsAndStatements {
-        $$ = createNodeList($1);
+        $$ = $1;
         addNodes($$, $3);
         debugSyntaxRule("VarsAndStatements -> VarDeclaration SEMICOLON VarsAndStatements", NULL, $$);
     }
@@ -251,8 +287,20 @@ Statement: IDENTIFIER ASSIGN Expr {
         debugSyntaxRule("Statement -> IDENTIFIER ASSIGN Expr", $$, NULL);
     }
     | LBRACE StatementList RBRACE {
-        $$ = createNode(Block, NULL);
-        addChilds($$, $2);
+         struct Node *nd = NULL;
+         struct NodeList *nl = $2;
+         int i = 0;
+         if (nl->node != NULL) {
+           while (nl != NULL) {
+              nd = nl->node;
+              i++;
+              nl = nl->next;
+            }
+         }
+         if (i > 1) {
+           $$ = createNode(Block, NULL);
+           addChilds($$, $2);
+         } else $$ = nd;
         debugSyntaxRule("Statement -> LBRACE StatementList RBRACE", $$, NULL);
     }
     | IF Expr BlockProduction {
@@ -261,20 +309,20 @@ Statement: IDENTIFIER ASSIGN Expr {
         addChilds($$, $3);
         debugSyntaxRule("Statement -> IF Expr BlockProduction", $$, NULL);
     }
-    | IF Expr BlockProduction ELSE BlockProduction {
+    | IF Expr BlockProduction2 ELSE BlockProduction2 {
         $$ = createNode(If, NULL);
         addChild($$, $2);
         addChilds($$, $3);
         addChilds($$, $5);
         debugSyntaxRule("Statement -> IF Expr BlockProduction ELSE BlockProduction", $$, NULL);
     }
-    | FOR Expr BlockProduction {
+    | FOR Expr BlockProduction2 {
         $$ = createNode(For, NULL);
         addChild($$, $2);
         addChilds($$, $3);
         debugSyntaxRule("Statement -> FOR Expr BlockProduction", $$, NULL);
     }
-    | FOR BlockProduction {
+    | FOR BlockProduction2 {
         $$ = createNode(For, NULL);
         addChilds($$, $2);
         debugSyntaxRule("Statement -> FOR BlockProduction", $$, NULL);
@@ -298,6 +346,14 @@ Statement: IDENTIFIER ASSIGN Expr {
         debugSyntaxRule("Statement -> PRINT LPAR STRLIT RPAR", $$, NULL);
     }
     | error                  { errors.syntax++; }
+;
+
+StatementList: Statement SEMICOLON StatementList {
+        $$ = createNodeList($1);
+        addNodes($$, $3);
+        debugSyntaxRule("StatementList -> Statement SEMICOLON StatementList", NULL, $$);
+    }
+    | /* ϵ */  %empty { $$ = createNodeList(NULL); debugSyntaxRule("StatementList -> ε", NULL, $$); }
 ;
 
 
@@ -442,14 +498,15 @@ BlockProduction: LBRACE StatementList RBRACE {
         $$ = blockList;
         debugSyntaxRule("BlockProduction -> LBRACE StatementList RBRACE", NULL, $$);
     }
-;
 
-StatementList: Statement SEMICOLON StatementList {
-        $$ = createNodeList($1);
-        addNodes($$, $3);
-        debugSyntaxRule("StatementList -> Statement SEMICOLON StatementList", NULL, $$);
+BlockProduction2: LBRACE StatementList RBRACE {
+        struct Node *block = createNode(Block, NULL);
+        addChilds(block, $2);
+        $$ = createNodeList(block);
+
+        debugSyntaxRule("BlockProduction -> LBRACE StatementList RBRACE", NULL, $$);
     }
-    | /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("StatementList -> ε", NULL, $$); }
+
 ;
 
 %%

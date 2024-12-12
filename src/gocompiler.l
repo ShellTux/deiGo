@@ -43,10 +43,11 @@
     extern struct Pos statePos;
     extern struct Pos syntaxPos;
 
+    struct String strprs = {0};
+
     #define ERROR_FORMAT(MESSAGE) "Line %d, column %d: " MESSAGE "\n"
     #define PRINT_ERROR(FORMAT, ...) printf(ERROR_FORMAT(FORMAT), __VA_ARGS__)
     #define YY_USER_ACTION tokenPreHook();
-
 %}
 
 digit			[0-9]
@@ -139,7 +140,12 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 					BEGIN(INITIAL);
 
 					if (isValidString && !(debugMode & Lexer)) {
-                                                yylval.string = strdup(string.buffer);
+						
+						stringDestroy(&strprs);
+						stringAppend(&strprs, "\"");
+						stringAppend(&strprs, string.buffer);
+						stringAppend(&strprs, "\"");
+                                                yylval.string = strprs.buffer;
 						return STRLIT;
 					}
 				}
@@ -232,6 +238,8 @@ INVALID_OCTAL		0[0-7]*[8-9]+{digit}*
 {INVALID_OCTAL}		{ PRINT_ERROR("invalid octal constant (%s)", lexerPos.line, lexerPos.column - yyleng, yytext); }
 .			{ PRINT_ERROR("illegal character (%s)", lexerPos.line, lexerPos.column - yyleng, yytext); }
 <<EOF>>			{
+				syntaxPos.line++;
+                                syntaxPos.column = 1;
 				if (checkLastToken() && !(debugMode & Lexer)) {
 					lastToken = L_OTHER;
 					return SEMICOLON;
@@ -246,24 +254,35 @@ int yywrap() {  /* called on EOF, return 1 to terminate */
 }
 
 void tokenPreHook() { /* called before every catched token */
-  syntaxPos = lexerPos;
+	syntaxPos.line = lexerPos.line;
+	syntaxPos.column = lexerPos.column;
 
-  lexerPos.column += yyleng;
-}
-
-void nextLine(void) {
-  lexerPos.line++;
-  lexerPos.column = 1;
+	lexerPos.column += yyleng;
 }
 
 void yyerror(const char *error) {
 	errors.lexer++;
 
 	if (!(debugMode & Parser) && strcmp("syntax error", error) == 0) {
-		errors.syntax++;
 		return;
 	}
+        if (string.buffer != NULL) {
+            if (string.length > 1) {
+                stringDestroy(&strprs);
+                stringAppend(&strprs, "\"");
+                stringAppend(&strprs, string.buffer);
+                stringAppend(&strprs, "\"");
+                printf(ERROR_FORMAT("%s: %s"), syntaxPos.line, (syntaxPos.column - (int)strprs.length) + 1, error, strprs.buffer);
+            } else {
+                printf(ERROR_FORMAT("%s: %s"), syntaxPos.line, syntaxPos.column, error, yytext);
+            }
+        } else {
+            printf(ERROR_FORMAT("%s: %s"), syntaxPos.line, syntaxPos.column, error, yytext);
+        }
+}
 
-	printf(ERROR_FORMAT("%s: %s"), syntaxPos.line, syntaxPos.column, error, yytext);
+void nextLine(void) {
+	lexerPos.line++;
+	lexerPos.column = 1;
 }
 // vim: expandtab:shiftwidth=4:softtabstop=4:smartindent

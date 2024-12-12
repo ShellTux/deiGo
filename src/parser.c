@@ -231,8 +231,7 @@ void printNode(const struct Node *node, const int depth) {
 
   printCategory(node->tokenType);
   if (node->tokenValue != NULL) {
-    fprintf(outFile, node->tokenType == StrLit ? "(\"%s\")" : "(%s)",
-            node->tokenValue);
+    fprintf(outFile, "(%s)", node->tokenValue);
   }
   fprintf(outFile, "\n");
 
