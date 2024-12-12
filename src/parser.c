@@ -220,7 +220,7 @@ void destroyList(struct NodeList *list, const bool destroyNodes) {
   }
 }
 
-void printNode(const struct Node *node, const int depth) {
+void printNode(const struct Node *node, const int depth, const bool annotate) {
   if (node == NULL) {
     return;
   }
@@ -233,6 +233,9 @@ void printNode(const struct Node *node, const int depth) {
   if (node->tokenValue != NULL) {
     fprintf(outFile, "(%s)", node->tokenValue);
   }
+
+  (void)annotate;
+
   fprintf(outFile, "\n");
 
 #if 0
@@ -240,18 +243,19 @@ void printNode(const struct Node *node, const int depth) {
 #else
   for (struct NodeList *children = node->children;
        children != NULL && children->node != NULL; children = children->next) {
-    printNode(children->node, depth + 1);
+    printNode(children->node, depth + 1, annotate);
   }
 #endif
 }
 
-void printNodeList(const struct NodeList *nodeList, const int depth) {
+void printNodeList(const struct NodeList *nodeList, const int depth,
+                   const bool annotate) {
   if (nodeList == NULL) {
     return;
   }
 
-  printNode(nodeList->node, depth + 1);
-  printNodeList(nodeList->next, depth + 1);
+  printNode(nodeList->node, depth + 1, annotate);
+  printNodeList(nodeList->next, depth + 1, annotate);
 }
 
 struct Node *getChild(const struct Node *parent, int position) {

@@ -4,6 +4,7 @@
 #include "semantics.h"
 
 #include "y.tab.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -153,7 +154,7 @@ int main(int argc, char **argv) {
 
   if (debugMode & Parser) {
     showSymbolTable(globalSymbolTable);
-    printNode(program, 0);
+    printNode(program, 0, false);
     return 0;
   }
 
@@ -163,7 +164,7 @@ int main(int argc, char **argv) {
     }
 
     showSymbolTable(globalSymbolTable);
-    printNode(program, 0);
+    printNode(program, 0, true);
     return 0;
   }
 

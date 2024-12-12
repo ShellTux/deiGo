@@ -257,7 +257,7 @@ void destroyList(struct NodeList *list, const bool destroyNodes);
  * @param node A pointer to the node to print.
  * @param depth An integer representing the depth level for indentation.
  */
-void printNode(const struct Node *node, const int depth);
+void printNode(const struct Node *node, const int depth, const bool annotate);
 
 /**
  * @function printNodeList
@@ -266,7 +266,8 @@ void printNode(const struct Node *node, const int depth);
  * @param nodeList A pointer to the linked list of nodes to print.
  * @param depth An integer representing the depth level for indentation.
  */
-void printNodeList(const struct NodeList *nodeList, const int depth);
+void printNodeList(const struct NodeList *nodeList, const int depth,
+                   const bool annotate);
 
 struct Node *getChild(const struct Node *parent, int position);
 
