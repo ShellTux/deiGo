@@ -238,14 +238,10 @@ void printNode(const struct Node *node, const int depth, const bool annotate) {
 
   fprintf(outFile, "\n");
 
-#if 0
-  printNodeList(node->children, depth);
-#else
   for (struct NodeList *children = node->children;
        children != NULL && children->node != NULL; children = children->next) {
     printNode(children->node, depth + 1, annotate);
   }
-#endif
 }
 
 void printNodeList(const struct NodeList *nodeList, const int depth,
