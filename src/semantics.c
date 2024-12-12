@@ -26,9 +26,9 @@
 #include "debug.h"
 #include "gocompiler.h"
 #include "parser.h"
-#include "stdbool.h"
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>

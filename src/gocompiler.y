@@ -176,17 +176,14 @@ VarDeclaration: VAR IDENTIFIER VarSpecs Type {
 
         $$ = createNodeList(nd);
 
-        if ($4 != NULL) {
-          struct NodeList *nl = $4;
-          if (nl->node != NULL) {          
-            while (nl != NULL) {
-              struct Node *nda = createNode(VarDecl, NULL);
-              addChild(nda, $5);
-              addChild(nda, createNode(Identifier, nl->node->tokenValue));
-              addNode($$, nda);
-              nl = nl->next;
-            }
-          }  
+        if ($4 != NULL && $4->node != NULL) {
+          for (struct NodeList *nl = $4; nl != NULL; nl = nl->next) {
+            struct Node *nda = createNode(VarDecl, NULL);
+
+            addChild(nda, $5);
+            addChild(nda, createNode(Identifier, nl->node->tokenValue));
+            addNode($$, nda);
+          }
         }
     }
 ;
@@ -201,7 +198,7 @@ VarSpecs: COMMA IDENTIFIER VarSpecs {
         $$ = createNodeList(createNode(Identifier, $1)); // Nó único para o identificador
         debugSyntaxRule("VarSpecs -> IDENTIFIER", NULL, $$);
     }
-    | /* epsilon */  %empty { $$ = createNodeList(NULL); debugSyntaxRule("VarSpecs -> ε", NULL, $$); }
+    | /* ϵ */  %empty { $$ = createNodeList(NULL); debugSyntaxRule("VarSpecs -> ε", NULL, $$); }
 ;
 
 Type: INT     { $$ = createNode(Int,     NULL); debugSyntaxRule("Type -> INT",     $$, NULL); }
@@ -288,20 +285,21 @@ Statement: IDENTIFIER ASSIGN Expr {
     }
     | LBRACE StatementList RBRACE {
          struct Node *nd = NULL;
-         struct NodeList *nl = $2;
          int i = 0;
-         if (nl->node != NULL) {
-           while (nl != NULL) {
-              nd = nl->node;
-              i++;
-              nl = nl->next;
-            }
+
+         for (struct NodeList *nl = $2; nl != NULL; nl = nl->next) {
+           nd = nl->node;
+           i++;
          }
+
          if (i > 1) {
            $$ = createNode(Block, NULL);
            addChilds($$, $2);
-         } else $$ = nd;
-        debugSyntaxRule("Statement -> LBRACE StatementList RBRACE", $$, NULL);
+         } else {
+           $$ = nd;
+         }
+
+         debugSyntaxRule("Statement -> LBRACE StatementList RBRACE", $$, NULL);
     }
     | IF Expr BlockProduction {
         $$ = createNode(If, NULL);
@@ -506,7 +504,6 @@ BlockProduction2: LBRACE StatementList RBRACE {
 
         debugSyntaxRule("BlockProduction -> LBRACE StatementList RBRACE", NULL, $$);
     }
-
 ;
 
 %%
