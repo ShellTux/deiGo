@@ -100,8 +100,16 @@ struct SymbolList *insertSymbol(struct SymbolList *table,
 
 struct SymbolList *searchSymbol(const struct SymbolList *list,
                                 const char *const identifier) {
+  if (identifier == NULL) {
+    return NULL;
+  }
+
   for (struct SymbolList *symbol = (struct SymbolList *)list; symbol != NULL;
        symbol = symbol->next) {
+
+    if (symbol->identifier == NULL) {
+      continue;
+    }
 
     if (strcmp(identifier, symbol->identifier) != 0) {
       continue;

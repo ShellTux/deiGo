@@ -35,8 +35,6 @@
 	extern enum DebugMode debugMode;
 	extern struct Errors errors;
 	extern struct Node *program;
-        struct NodeList *listaux = NULL;
-
 %}
 
 %union {

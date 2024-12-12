@@ -24,6 +24,7 @@
  ***************************************************************************/
 #include "parser.h"
 #include "gocompiler.h"
+#include "semantics.h"
 #include "stdbool.h"
 
 #include <assert.h>
@@ -33,6 +34,7 @@
 
 extern struct Pos syntaxPos;
 extern FILE *outFile;
+extern struct SymbolList *globalSymbolTable;
 
 enum IdentifierType Category2IdentifierType(const enum Category category) {
   switch (category) {
@@ -234,7 +236,21 @@ void printNode(const struct Node *node, const int depth, const bool annotate) {
     fprintf(outFile, "(%s)", node->tokenValue);
   }
 
-  (void)annotate;
+  // TODO: Implement annotate
+#if 0
+  if (annotate) {
+    if (node->tokenType == Identifier) {
+      struct SymbolList *symbol =
+          searchSymbol(globalSymbolTable, node->tokenValue);
+      if (symbol != NULL && symbol->node->tokenType == FuncDecl) {
+        const char *const paramsString = getParamsS(symbol->node);
+        if (strlen(paramsString) != 0) {
+          fprintf(outFile, " - (%s)", paramsString);
+        }
+      }
+    }
+  }
+#endif
 
   fprintf(outFile, "\n");
 
