@@ -263,6 +263,11 @@ ParamDecl: IDENTIFIER Type {
 ;
 
 VarsAndStatements: /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("VarsAndStatements -> ε", NULL, $$); }
+    | SEMICOLON VarsAndStatements {
+        // NOTE: Ignora ponto e vírgula extra
+        $$ = $2;
+        debugSyntaxRule("VarsAndStatements -> SEMICOLON VarsAndStatements", NULL, $$);
+    }
     | VarDeclaration SEMICOLON VarsAndStatements {
         $$ = $1;
         addNodes($$, $3);
@@ -378,8 +383,8 @@ FuncInvocation: IDENTIFIER LPAR RPAR {
 ;
 
 ExprList: ExprList COMMA Expr {
-        $$ = createNodeList($3);
-        addNodes($$, $1);
+        $$ = $1;
+        addNode($$, $3);
         debugSyntaxRule("ExprList -> ExprList COMMA Expr", NULL, $$);
     }
     | /* ϵ */ %empty { $$ = createNodeList(NULL); debugSyntaxRule("ExprList -> ε", NULL, $$); }
