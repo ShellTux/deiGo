@@ -53,6 +53,9 @@ $(COMPILER_ZIP): include/*.h src/*.[cyl]
 src/gocompiler.c:
 	@echo "[Excluding $@ from implicit rules]"
 
+%.pdf: %.md
+	pandoc $(PANDOC_OPTS) --output=$@ $<
+
 .PHONY: run
 run: $(COMPILER)
 	./$(COMPILER)
