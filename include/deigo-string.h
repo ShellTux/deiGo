@@ -12,4 +12,6 @@ struct String {
 void stringAppend(struct String *dest, const char *src);
 void stringDestroy(struct String *string);
 
+struct String *getStaticString(const char *const initialString);
+
 #endif // INCLUDE_INCLUDE_STRING_H_

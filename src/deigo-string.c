@@ -4,6 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define STATIC_STRINGS_MAX 10
+
+struct StaticStrings {
+  struct String buffers[STATIC_STRINGS_MAX];
+  size_t index;
+};
+
+static struct StaticStrings staticStrings = {0};
+
 void stringAppend(struct String *dest, const char *src) {
   if (dest == NULL || src == NULL) {
     return;
@@ -42,4 +51,13 @@ void stringDestroy(struct String *string) {
     free(string->buffer);
   }
   *string = (struct String){0};
+}
+
+struct String *getStaticString(const char *const initialString) {
+  struct String *string = &staticStrings.buffers[staticStrings.index++];
+
+  stringDestroy(string);
+  stringAppend(string, initialString);
+
+  return string;
 }
