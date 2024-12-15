@@ -26,11 +26,10 @@ COMPILER      = bin/deigoc
 COMPILER_SRC  = \
 	       $(LEX_OUTPUT) \
 	       $(YACC_OUTPUT) \
-	       src/gocompiler.c \
-	       src/main.c \
-	       src/String.c \
-	       src/lexer.c src/parser.c src/semantics.c src/codegen.c
-COMPILER_SRC := $(COMPILER_SRC:.c=.o)
+	       src/gocompiler.o \
+	       src/main.o \
+	       src/String.o \
+	       src/lexer.o src/parser.o src/semantics.o src/codegen.o
 COMPILER_ZIP  = gocompiler.zip
 
 all: $(COMPILER)

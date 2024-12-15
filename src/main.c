@@ -2,7 +2,6 @@
 #include "gocompiler.h"
 #include "parser.h"
 #include "semantics.h"
-#include "y.tab.h"
 
 #include <stdbool.h>
 #include <stdio.h>
