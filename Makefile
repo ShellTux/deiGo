@@ -50,6 +50,39 @@ $(COMPILER_ZIP): include/*.h src/*.[cyl]
 	rm --force $@
 	zip --junk-paths $@ $^
 
+.PHONY: entrega
+entrega: bin/1.zip bin/2.zip bin/3.zip bin/4.zip
+
+%.zip: %-src.zip %-include.zip
+	rm --force $@
+	-rm --recursive bin/temp-zip
+	for zip in $^; do unzip -d bin/temp-zip "$$zip" || true; done
+	zip -r --junk-paths $@ ./bin/temp-zip
+
+bin/1-src.zip:
+	git archive --format=zip refs/tags/meta1:src > $@
+
+bin/1-include.zip:
+	touch $@
+
+bin/2-src.zip:
+	git archive --format=zip HEAD:src > $@
+
+bin/2-include.zip:
+	git archive --format=zip HEAD:include > $@
+
+bin/3-src.zip:
+	git archive --format=zip HEAD:src > $@
+
+bin/3-include.zip:
+	git archive --format=zip HEAD:include > $@
+
+bin/4-src.zip:
+	git archive --format=zip HEAD:src > $@
+
+bin/4-include.zip:
+	git archive --format=zip HEAD:include > $@
+
 src/gocompiler.c:
 	@echo "[Excluding $@ from implicit rules]"
 
