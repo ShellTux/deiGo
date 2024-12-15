@@ -31,7 +31,7 @@
 
     #include "gocompiler.h"
     #include "lexer.h"
-    #include "String.h"
+    #include "deigo-string.h"
     #include "y.tab.h"
 
     extern bool isValidString;

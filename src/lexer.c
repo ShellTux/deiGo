@@ -23,7 +23,7 @@
  *
  ***************************************************************************/
 #include "lexer.h"
-#include "String.h"
+#include "deigo-string.h"
 #include "gocompiler.h"
 
 #include <stdbool.h>

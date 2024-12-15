@@ -1,4 +1,4 @@
-#include "String.h"
+#include "deigo-string.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
