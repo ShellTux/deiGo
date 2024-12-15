@@ -24,6 +24,7 @@
  ***************************************************************************/
 #include "semantics.h"
 #include "debug.h"
+#include "deigo-string.h"
 #include "gocompiler.h"
 #include "parser.h"
 
@@ -282,6 +283,9 @@ int checkVarDecl(struct SymbolList *scope, struct Node *varDecl) {
   struct Node *id = getChild(varDecl, 1);
   enum IdentifierType type =
       Category2IdentifierType(getChild(varDecl, 0)->tokenType);
+
+  stringAppend(&id->annotation, identifierTypeS(type));
+
   if (insertSymbol(scope, id->tokenValue, type, varDecl) == NULL) {
     errorSymbol(SYMBOL_ALREADY_DEFINED_ERROR, id);
     return 1;
@@ -348,6 +352,9 @@ int checkParams(struct SymbolList *scopeTable, struct Node *params) {
     param->identifierType = type;
 
     struct Node *id = getChild(param, 1);
+
+    stringAppend(&id->annotation, identifierTypeS(type));
+
     if (insertSymbol(scopeTable, id->tokenValue, type, param) == NULL) {
       fprintf(outFile, "Error: identifier already declared: %s\n",
               id->tokenValue);

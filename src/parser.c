@@ -23,6 +23,7 @@
  *
  ***************************************************************************/
 #include "parser.h"
+#include "deigo-string.h"
 #include "gocompiler.h"
 #include "semantics.h"
 #include "stdbool.h"
@@ -113,7 +114,11 @@ struct Node *createNode(const enum Category tokenType, const char *tokenValue) {
       .pos = syntaxPos,
       .children = NULL,
       .identifierType = TypeNone,
+      .annotation = {0},
   };
+
+  stringDestroy(&node->annotation);
+
   return node;
 }
 
@@ -127,6 +132,62 @@ struct NodeList *createNodeList(struct Node *node) {
   *list = empty;
 
   return list;
+}
+
+char *getAnnotationListS(const struct AnnotationList *annotationList) {
+  if (annotationList == NULL) {
+    return "";
+  }
+
+  struct String *string = getStaticString("");
+
+  int length = 0;
+  for (struct AnnotationList *current = (struct AnnotationList *)annotationList;
+       current != NULL; current = current->next) {
+
+    if (length > 0) {
+      stringAppend(string, ",");
+    }
+
+    length++;
+
+    switch (current->type) {
+#define IDENTIFIER(ENUM, STRING)                                               \
+  case ENUM: {                                                                 \
+    stringAppend(string, STRING);                                              \
+  } break;
+      IDENTIFIER_TYPES
+#undef IDENTIFIER
+    }
+  }
+
+  return string->buffer;
+}
+
+void appendAnnotationType(struct AnnotationList **annotationList,
+                          const enum IdentifierType type) {
+  if (annotationList == NULL) {
+    return;
+  }
+
+  struct AnnotationList *new = malloc(sizeof(*new));
+  *new = (struct AnnotationList){
+      .type = type,
+      .next = NULL,
+  };
+
+  if (*annotationList == NULL) {
+    *annotationList = new;
+    return;
+  }
+
+  struct AnnotationList *current = NULL;
+
+  for (current = *annotationList; current->next != NULL;
+       current = current->next) {
+  }
+
+  current->next = new;
 }
 
 struct Node *addChild(struct Node *parent, const struct Node *childNode) {
@@ -236,21 +297,10 @@ void printNode(const struct Node *node, const int depth, const bool annotate) {
     fprintf(outFile, "(%s)", node->tokenValue);
   }
 
-  // TODO: Implement annotate
-#if 0
-  if (annotate) {
-    if (node->tokenType == Identifier) {
-      struct SymbolList *symbol =
-          searchSymbol(globalSymbolTable, node->tokenValue);
-      if (symbol != NULL && symbol->node->tokenType == FuncDecl) {
-        const char *const paramsString = getParamsS(symbol->node);
-        if (strlen(paramsString) != 0) {
-          fprintf(outFile, " - (%s)", paramsString);
-        }
-      }
-    }
+  const char *const annotation = node->annotation.buffer;
+  if (annotate && annotation != NULL && annotation[0] != '\0') {
+    fprintf(outFile, " - %s", node->annotation.buffer);
   }
-#endif
 
   fprintf(outFile, "\n");
 

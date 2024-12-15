@@ -25,7 +25,9 @@
 #ifndef INCLUDE_INCLUDE_PARSER_H_
 #define INCLUDE_INCLUDE_PARSER_H_
 
+#include "deigo-string.h"
 #include "gocompiler.h"
+
 #include <stdbool.h>
 
 #define TOKEN_ROOT CATEGORY(Program)
@@ -116,6 +118,15 @@ char *identifierTypeS(const enum IdentifierType type);
 void printIdentifierType(const enum IdentifierType type);
 void printType(const enum IdentifierType type);
 
+struct AnnotationList {
+  enum IdentifierType type;
+  struct AnnotationList *next;
+};
+
+char *getAnnotationListS(const struct AnnotationList *annotationList);
+void appendAnnotationType(struct AnnotationList **annotationList,
+                          const enum IdentifierType type);
+
 /**
  * @struct Node
  * Represents a node in a tree-like structure.
@@ -137,6 +148,7 @@ struct Node {
   struct Pos pos;
   struct NodeList *children;
   enum IdentifierType identifierType;
+  struct String annotation;
 };
 
 /**
